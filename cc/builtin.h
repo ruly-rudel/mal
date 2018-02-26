@@ -14,7 +14,7 @@ typedef struct
 
 typedef struct
 {
-	int64_t		type:   3;
+	int64_t		dummy:  3;
 	int64_t		val:   61;
 } rint_t;
 
@@ -40,22 +40,13 @@ typedef struct _cons_t
 } cons_t;
 
 
-EXTERN value_t NIL
-#ifdef DEF_EXTERN
- =
-{
-	.type.main	= NIL_T,
-	.type.sub	= 0
-}
-#endif
-; 
+#define NIL ((value_t){ .type.main = NIL_T, .type.sub = 0 })
 
-
-value_t _read(FILE* fp);
-void _print(value_t s, FILE* fp);
-cons_t*	alloc_cons(void);
-value_t	cons(const value_t car, const value_t cdr);
-
-
+rtype_t rtypeof(value_t v);
+value_t readline	(FILE* fp);
+value_t read_str	(value_t s);
+void    printline	(value_t s, FILE* fp);
+value_t pr_str		(value_t s);
+value_t	cons		(value_t car, value_t cdr);
 
 #endif // _builtin_h_

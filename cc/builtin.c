@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "builtin.h"
 
-static inline rtype_t rtypeof(value_t v) { return v.type.main; }
 
 static inline value_t car(value_t x)
 {
@@ -16,14 +15,14 @@ static inline value_t cdr(value_t x)
 
 static inline cons_t* aligned_addr(value_t v) { return (cons_t*) (((uint64_t)v.cons) & 0xfffffffffffffff8); }
 
-cons_t*	alloc_cons(void)
+static cons_t*	alloc_cons(void)
 {
 	cons_t* c = (cons_t*)malloc(sizeof(cons_t));
 
 	return c;
 }
 
-value_t	cons(const value_t car, const value_t cdr)
+value_t	cons(value_t car, value_t cdr)
 {
 	value_t	r	= { 0 };
 	// r.type.main is always 0 (=CONS_T) because malloc returns ptr aligned to 8byte.
@@ -35,7 +34,9 @@ value_t	cons(const value_t car, const value_t cdr)
 	return r;
 }
 
-value_t _read(FILE* fp)
+rtype_t rtypeof(value_t v) { return v.type.main; }
+
+value_t readline(FILE* fp)
 {
 	int c;
 	cons_t	 r	= { 0 };
@@ -65,7 +66,7 @@ value_t _read(FILE* fp)
 	return NIL;
 }
 
-void _print(value_t s, FILE* fp)
+void printline(value_t s, FILE* fp)
 {
 	while(rtypeof(s) == STR_T && s.type.sub != 0) {
 		cons_t* c = aligned_addr(s);
@@ -77,5 +78,15 @@ void _print(value_t s, FILE* fp)
 	fflush(fp);
 
 	return ;
+}
+
+value_t read_str(value_t s)
+{
+	return s;
+}
+
+value_t pr_str(value_t s)
+{
+	return s;
 }
 

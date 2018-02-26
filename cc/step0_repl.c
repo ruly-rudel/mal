@@ -3,18 +3,33 @@
 #include <stdio.h>
 #include "builtin.h"
 
+value_t read(FILE* fp)
+{
+	return readline(fp);
+}
+
+value_t eval(value_t v)
+{
+	return v;
+}
+
+void print(value_t s, FILE* fp)
+{
+	printline(s, fp);
+	return;
+}
 
 int main(int argc, char* argv[])
 {
-	value_t s;
+	value_t r, e;
 
-	for(;;)
+	do
 	{
 		fprintf(stdout, "mal-user> ");
-		s = _read(stdin);
-		if(s.type.main == NIL_T) break;
-		_print(s, stdout);
-	}
+		r = read(stdin);
+		e = eval(r);
+		print(e, stdout);
+	} while ( rtypeof(r) != NIL_T );
 
 	return 0;
 }
