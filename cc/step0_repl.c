@@ -1,21 +1,19 @@
 
+#define DEF_EXTERN
 #include <stdio.h>
 #include "builtin.h"
 
 
 int main(int argc, char* argv[])
 {
-	int c;
+	value_t s;
 
-	fprintf(stdout, "mal-user> ");
-
-	while((c = fgetc(stdin)) != EOF)
+	for(;;)
 	{
-		fputc(c, stdout);
-		if(c == '\n')
-		{
-			fprintf(stdout, "mal-user> ");
-		}
+		fprintf(stdout, "mal-user> ");
+		s = _read(stdin);
+		if(s.type.main == NIL_T) break;
+		_print(s, stdout);
 	}
 
 	return 0;
