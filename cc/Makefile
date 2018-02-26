@@ -6,7 +6,7 @@ LD=$(CC)
 AR=ar
 
 DEBUG=-ggdb
-CFLAGS=-O3 -Wall $(DEBUG) $(INCPATHS)
+CFLAGS=-O3 -Wall $(DEBUG) $(INCPATHS) -std=c11
 LDFLAGS=-O3 $(DEBUG) $(LIBPATHS) -L.
 #CXXFLAGS=-O3 -Wall $(DEBUG) $(INCPATHS) -std=c++14
 #LDFLAGS=-O3 $(DEBUG) $(LIBPATHS) -L. -lreadline -lhistory
