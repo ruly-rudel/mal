@@ -10,6 +10,7 @@ value_t read(FILE* fp)
 
 value_t eval(value_t v)
 {
+//	return (value_t){ .type.main = INT_T, .type.sub = 732954 };
 	return v;
 }
 

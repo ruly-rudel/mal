@@ -85,8 +85,67 @@ value_t read_str(value_t s)
 	return s;
 }
 
+
+value_t pr_str_int_rec(uint64_t x, value_t s)
+{
+	if(x == 0)
+	{
+		return s;
+	}
+	else
+	{
+		value_t r      = { 0 };
+		r.cons         = alloc_cons();
+		r.cons->cdr    = s;
+		r.cons->car    = (value_t){ .type.main = CHAR_T, .type.sub = '0' + (x % 10)};
+		r.type.main    = STR_T;
+
+		return pr_str_int_rec(x / 10, r);
+	}
+}
+
+value_t pr_str_int(int64_t x)
+{
+	// sign
+	if(x < 0)
+	{
+		value_t	r	= { 0 };
+		r.cons		= alloc_cons();
+		r.cons->car	= (value_t){ .type.main = CHAR_T, .type.sub = '-'};
+		r.cons->cdr	= pr_str_int_rec(-x, NIL);	// ABS
+		r.type.main	= STR_T;
+
+		return r;
+	}
+	else
+	{
+		return pr_str_int_rec(x, NIL);
+	}
+}
+
 value_t pr_str(value_t s)
 {
+	switch(rtypeof(s))
+	{
+	    case CONS_T:
+		break;
+
+	    case NIL_T:
+		break;
+
+	    case SYMBOL_T:
+		break;
+
+	    case INT_T:
+		return pr_str_int(s.rint.val);
+
+	    case STR_T:
+		return s;
+
+	    default:
+		break;
+	}
+
 	return s;
 }
 
