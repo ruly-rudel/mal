@@ -9,7 +9,7 @@ static cons_t* aligned_addr(value_t v)
 	return (cons_t*) (((uint64_t)v.cons) & 0xfffffffffffffff8);
 }
 
-static cons_t*	alloc_cons(void)
+static cons_t* alloc_cons(void)
 {
 	cons_t* c = (cons_t*)malloc(sizeof(cons_t));
 
@@ -95,14 +95,15 @@ value_t readline(FILE* fp)
 	value_t	 r	= NIL;
 	value_t* cur	= &r;
 
-	while((c = fgetc(fp)) != EOF) {
+	while((c = fgetc(fp)) != EOF)
+	{
+		*cur = cons(RCHAR(c), NIL);
+		cur  = &cur->cons->cdr;
+
 		if(c == '\n')
 		{
 			r.type.main    = STR_T;
 			return r;
-		} else {
-			*cur = cons(RCHAR(c), NIL);
-			cur  = &cur->cons->cdr;
 		}
 	}
 
@@ -125,15 +126,201 @@ void printline(value_t s, FILE* fp)
 	for(; !nilp(s); s = cdr(s))
 		fputc(car(s).rint.val, fp);
 
-	fputc('\n', fp);
 	fflush(fp);
 
 	return ;
 }
 
+static void scan_to_lf(value_t *s)
+{
+	assert(s != NULL);
+	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+
+	while(!nilp(*s))
+	{
+		assert(rtypeof(*s) == CONS_T);
+
+		value_t c = car(*s);	// current char
+		assert(rtypeof(c) == CHAR_T);
+
+		if(c.rint.val == '\n')
+		{
+			return ;
+		}
+		
+		*s = cdr(*s);
+	}
+
+	return ;
+}
+
+static value_t scan_to_whitespace(value_t *s)
+{
+	assert(s != NULL);
+	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+
+	value_t r = NIL;
+	value_t *cur = &r;
+
+	while(!nilp(*s))
+	{
+		assert(rtypeof(*s) == CONS_T);
+
+		value_t c = car(*s);	// current char
+
+		assert(rtypeof(c) == CHAR_T);
+
+		if( c.rint.val == ' '  ||
+		    c.rint.val == '\t' ||
+		    c.rint.val == '\n' ||
+		    c.rint.val == ','  
+		  )
+		{
+			r.type.main = STR_T;
+			return r;
+		}
+		else
+		{
+			*cur = cons(c, NIL);
+			cur  = &cur->cons->cdr;
+
+			// next
+			*s = cdr(*s);
+		}
+	}
+
+	assert(1);
+	return NIL;	// error: end of source string before doublequote
+}
+
+static value_t scan_to_doublequote(value_t *s)
+{
+	assert(s != NULL);
+	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+
+	value_t r = NIL;
+	value_t *cur = &r;
+
+	int st = 0;
+	while(!nilp(*s))
+	{
+		assert(rtypeof(*s) == CONS_T);
+
+		value_t c = car(*s);	// current char
+
+		assert(rtypeof(c) == CHAR_T);
+
+		switch(st)
+		{
+		    case 0:	// not escape
+			if(c.rint.val == '\\')
+			{
+				st = 1;	// enter escape mode
+			}
+			else if(c.rint.val == '"')
+			{
+				*s = cdr(*s);
+				r.type.main = STR_T;
+				return r;
+			}
+			else
+			{
+				*cur = cons(c, NIL);
+			}
+			break;
+
+		    case 1:	// escape
+			*cur = cons(c, NIL);
+			st = 0;
+			break;
+		}
+
+		// next
+		*s = cdr(*s);
+	}
+
+	assert(1);
+	return NIL;	// error: end of source string before doublequote
+}
+
+static value_t scan(value_t *s)
+{
+	assert(s != NULL);
+	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+
+	while(!nilp(*s))
+	{
+		assert(rtypeof(*s) == CONS_T);
+
+		value_t c = car(*s);	// current char
+		assert(rtypeof(c) == CHAR_T);
+
+		// skip white space
+		if( c.rint.val == ' '  ||
+		    c.rint.val == '\t' ||
+		    c.rint.val == '\n' ||
+		    c.rint.val == ','  
+		  )
+		{
+			*s = cdr(*s);
+		}
+		else
+		{
+			switch(c.rint.val)
+			{
+			    // special character
+			    case '~':
+			    case '[':
+			    case ']':
+			    case '{':
+			    case '}':
+			    case '(':
+			    case ')':
+			    case '\'':
+			    case '`':
+			    case '^':
+			    case '@':
+				*s           = cdr (*s);
+				value_t sr   = cons(c, NIL);
+				sr.type.main = STR_T;
+				return sr;
+
+			    // comment
+			    case ';':
+				scan_to_lf(s);
+			        break;	// return to skip-white-space
+
+			    // string
+			    case '"':
+				return scan_to_doublequote(s);
+
+			    // atom
+			    default:
+				return scan_to_whitespace(s);
+			}
+		}
+	}
+
+	return NIL;	// no form or atom
+}
+
 value_t read_str(value_t s)
 {
-	return s;
+	value_t p = s;
+	p.type.main = CONS_T;
+
+	value_t r = NIL;
+	value_t* cur = &r;
+
+	value_t token;
+
+	while(!nilp(token = scan(&p)))
+	{
+		*cur = cons(token, NIL);
+		cur  = &cur->cons->cdr;
+	} 
+
+	return r;
 }
 
 
