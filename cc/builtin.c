@@ -1,24 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <assert.h>
 #include "builtin.h"
 
 
-rtype_t rtypeof(value_t v) { return v.type.main; }
-
-static inline value_t car(value_t x)
+static cons_t* aligned_addr(value_t v)
 {
-	return rtypeof(x) == CONS_T ? x.cons->car : NIL;
+	return (cons_t*) (((uint64_t)v.cons) & 0xfffffffffffffff8);
 }
-
-static inline value_t cdr(value_t x)
-{
-	return rtypeof(x) == CONS_T ? x.cons->cdr : NIL;
-}
-
-static inline cons_t* aligned_addr(value_t v) { return (cons_t*) (((uint64_t)v.cons) & 0xfffffffffffffff8); }
-//static inline cons_t* aligned_addr(cons_t* v) { return (cons_t*) (((uint64_t)v     ) & 0xfffffffffffffff8); }
 
 static cons_t*	alloc_cons(void)
 {
@@ -26,6 +15,24 @@ static cons_t*	alloc_cons(void)
 
 	return c;
 }
+
+
+
+rtype_t rtypeof(value_t v)
+{
+	return v.type.main;
+}
+
+value_t car(value_t x)
+{
+	return rtypeof(x) == CONS_T ? x.cons->car : NIL;
+}
+
+value_t cdr(value_t x)
+{
+	return rtypeof(x) == CONS_T ? x.cons->cdr : NIL;
+}
+
 
 value_t	cons(value_t car, value_t cdr)
 {
@@ -99,13 +106,21 @@ value_t readline(FILE* fp)
 		}
 	}
 
-	return NIL;
+	return r;
 }
 
 void printline(value_t s, FILE* fp)
 {
-	assert(rtypeof(s) == STR_T);
-	s.type.main = CONS_T;
+	assert(rtypeof(s) == STR_T || rtypeof(s) == NIL_T);
+	if(s.type.main == STR_T)
+	{
+		if(s.type.sub == 0)
+		{
+			s = NIL;
+		} else {
+			s.type.main = CONS_T;
+		}
+	}
 
 	for(; !nilp(s); s = cdr(s))
 		fputc(car(s).rint.val, fp);
@@ -122,7 +137,7 @@ value_t read_str(value_t s)
 }
 
 
-value_t pr_str_int_rec(uint64_t x, value_t s)
+static value_t pr_str_int_rec(uint64_t x, value_t s)
 {
 	if(x == 0)
 	{
@@ -136,7 +151,7 @@ value_t pr_str_int_rec(uint64_t x, value_t s)
 	}
 }
 
-value_t pr_str_int(int64_t x)
+static value_t pr_str_int(int64_t x)
 {
 	value_t r;
 	if(x < 0)
@@ -153,7 +168,7 @@ value_t pr_str_int(int64_t x)
 }
 
 
-value_t pr_str_cons(value_t x)
+static value_t pr_str_cons(value_t x)
 {
 	value_t r    = NIL;
 

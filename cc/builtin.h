@@ -3,6 +3,7 @@
 
 #include "misc.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum _rtype_t { CONS_T = 0, NIL_T, SYMBOL_T, INT_T, FLOAT_T, CHAR_T, STR_T, OTHER_T } rtype_t;
 
@@ -41,15 +42,22 @@ typedef struct _cons_t
 
 
 #define NIL      ((value_t){ .type.main = NIL_T,  .type.sub = 0 })
-//#define EOS      ((value_t){ .type.main = STR_T,  .type.sub = 0 })
 #define RCHAR(X) ((value_t){ .type.main = CHAR_T, .type.sub = (X) })
 #define RINT(X)  ((value_t){ .type.main = INT_T,  .type.sub = (X) })
 
-rtype_t rtypeof(value_t v);
+rtype_t rtypeof	(value_t v);
+
+value_t car	(value_t x);
+value_t cdr	(value_t x);
+value_t	cons	(value_t car, value_t cdr);
+bool    nilp	(value_t x);
+value_t rplaca	(value_t x, value_t v);
+value_t rplacd	(value_t x, value_t v);
+value_t nconc	(value_t a, value_t b);
+
 value_t readline	(FILE* fp);
 value_t read_str	(value_t s);
 void    printline	(value_t s, FILE* fp);
 value_t pr_str		(value_t s);
-value_t	cons		(value_t car, value_t cdr);
 
 #endif // _builtin_h_
