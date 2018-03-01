@@ -10,8 +10,11 @@ value_t read(FILE* fp)
 
 value_t eval(value_t v)
 {
-//	return (value_t){ .type.main = INT_T, .type.sub = 732954 };
-	return v;
+//	return (value_t){ .type.main = INT_T, .type.sub = -732954 };
+	value_t ch = cons(RCHAR('+'), NIL);
+	ch.type.main = STR_T;
+	return cons(ch, cons(cons(RINT(-243), cons(RINT(9573), NIL)), cons(RINT(321), NIL)));
+//	return v;
 }
 
 void print(value_t s, FILE* fp)

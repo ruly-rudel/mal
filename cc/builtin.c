@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
 #include "builtin.h"
 
 
@@ -14,6 +16,7 @@ static inline value_t cdr(value_t x)
 }
 
 static inline cons_t* aligned_addr(value_t v) { return (cons_t*) (((uint64_t)v.cons) & 0xfffffffffffffff8); }
+//static inline cons_t* aligned_addr(cons_t* v) { return (cons_t*) (((uint64_t)v     ) & 0xfffffffffffffff8); }
 
 static cons_t*	alloc_cons(void)
 {
@@ -39,27 +42,19 @@ rtype_t rtypeof(value_t v) { return v.type.main; }
 value_t readline(FILE* fp)
 {
 	int c;
-	cons_t	 r	= { 0 };
-	value_t* cur	= &r.cdr;
-
+	value_t	 r	= EOS;
+	value_t* cur	= &r;
 
 	while((c = fgetc(fp)) != EOF) {
 		if(c == '\n')
 		{
-			// null terminate
-			cur->type.main    = STR_T;
-			cur->type.sub     = 0;
-
-			return r.cdr;
+			return r;
 		} else {
-			cons_t* nc        = alloc_cons();
-			nc->car.type.main = CHAR_T;
-			nc->car.rint.val  = c;
+			*cur           = cons(RCHAR(c), EOS);
+			value_t* nxt   = &cur->cons->cdr;
 
-			cur->cons         = nc;
-			cur->type.main    = STR_T;
-
-			cur               = &nc->cdr;
+			cur->type.main = STR_T;
+			cur            = nxt;
 		}
 	}
 
@@ -68,7 +63,8 @@ value_t readline(FILE* fp)
 
 void printline(value_t s, FILE* fp)
 {
-	while(rtypeof(s) == STR_T && s.type.sub != 0) {
+	while(rtypeof(s) == STR_T && s.type.sub != 0)
+	{
 		cons_t* c = aligned_addr(s);
 		fputc(c->car.rint.val, fp);
 		s = c->cdr;
@@ -94,11 +90,8 @@ value_t pr_str_int_rec(uint64_t x, value_t s)
 	}
 	else
 	{
-		value_t r      = { 0 };
-		r.cons         = alloc_cons();
-		r.cons->cdr    = s;
-		r.cons->car    = (value_t){ .type.main = CHAR_T, .type.sub = '0' + (x % 10)};
-		r.type.main    = STR_T;
+		value_t r   = cons(RCHAR('0' + (x % 10)), s);
+		r.type.main = STR_T;
 
 		return pr_str_int_rec(x / 10, r);
 	}
@@ -109,12 +102,8 @@ value_t pr_str_int(int64_t x)
 	// sign
 	if(x < 0)
 	{
-		value_t	r	= { 0 };
-		r.cons		= alloc_cons();
-		r.cons->car	= (value_t){ .type.main = CHAR_T, .type.sub = '-'};
-		r.cons->cdr	= pr_str_int_rec(-x, NIL);	// ABS
-		r.type.main	= STR_T;
-
+		value_t r   = cons(RCHAR('-'), pr_str_int_rec(-x, NIL));
+		r.type.main = STR_T;
 		return r;
 	}
 	else
@@ -123,12 +112,80 @@ value_t pr_str_int(int64_t x)
 	}
 }
 
+value_t rplaca(value_t x, value_t v)
+{
+	assert(rtypeof(x) == CONS_T || rtypeof(x) == STR_T);
+	cons_t* c = aligned_addr(x);
+	c->car = v;
+	
+	return x;
+}
+
+value_t rplacd(value_t x, value_t v)
+{
+	assert(rtypeof(x) == CONS_T || rtypeof(x) == STR_T);
+	cons_t* c = aligned_addr(x);
+	c->cdr = v;
+	
+	return x;
+}
+
+bool nilp(value_t x)
+{
+	return x.type.main == NIL_T && x.type.sub == 0;
+}
+
+
+value_t nconc(value_t a, value_t b)
+{
+	assert((rtypeof(a) == CONS_T && rtypeof(b) == CONS_T) ||
+	       (rtypeof(a) == STR_T  && rtypeof(b) == STR_T));
+
+	cons_t* i;
+	for(i = aligned_addr(a); !nilp(i->cdr); i = aligned_addr(i->cdr))
+		;
+	i->cdr = b;
+
+	return a;
+}
+
+value_t pr_str_cons(value_t x)
+{
+	assert(rtypeof(x) == CONS_T);
+
+	value_t r    = NIL;
+
+	while(!nilp(car(x)))
+	{
+		value_t sp   = cons(RCHAR(' '), NIL);
+		sp.type.main = STR_T;
+		if(nilp(r))
+		{
+			r = sp;
+		} else {
+			nconc(r, sp);
+		}
+
+		nconc(r, pr_str(car(x)));
+
+		x = cdr(x);
+	}
+
+	rplaca(r, RCHAR('('));
+
+	value_t cl   = cons(RCHAR(')'), NIL);
+	cl.type.main = STR_T;
+	nconc(r, cl);
+
+	return r;
+}
+
 value_t pr_str(value_t s)
 {
 	switch(rtypeof(s))
 	{
 	    case CONS_T:
-		break;
+		return pr_str_cons(s);
 
 	    case NIL_T:
 		break;
