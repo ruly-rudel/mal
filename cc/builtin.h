@@ -41,7 +41,7 @@ typedef struct _cons_t
 
 
 #define NIL      ((value_t){ .type.main = NIL_T,  .type.sub = 0 })
-#define EOS      ((value_t){ .type.main = STR_T,  .type.sub = 0 })
+//#define EOS      ((value_t){ .type.main = STR_T,  .type.sub = 0 })
 #define RCHAR(X) ((value_t){ .type.main = CHAR_T, .type.sub = (X) })
 #define RINT(X)  ((value_t){ .type.main = INT_T,  .type.sub = (X) })
 
