@@ -23,13 +23,18 @@ int main(int argc, char* argv[])
 {
 	value_t r, e;
 
-	do
+	for(;;)
 	{
 		fprintf(stdout, "mal-user> ");
 		r = read(stdin);
+		if(errp(r))
+		{
+			fprintf(stdout, "\n");
+			break;
+		}
 		e = eval(r);
 		print(e, stdout);
-	} while ( rtypeof(r) != NIL_T );
+	}
 
 	return 0;
 }

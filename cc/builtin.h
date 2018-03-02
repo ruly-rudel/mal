@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum _rtype_t { CONS_T = 0, NIL_T, SYMBOL_T, INT_T, FLOAT_T, CHAR_T, STR_T, OTHER_T } rtype_t;
+typedef enum _rtype_t { CONS_T = 0, SYM_T, INT_T, FLOAT_T, CHAR_T, STR_T, ERR_T, USR_T } rtype_t;
 
 typedef struct
 {
@@ -41,15 +41,19 @@ typedef struct _cons_t
 } cons_t;
 
 
-#define NIL      ((value_t){ .type.main = NIL_T,  .type.sub = 0 })
+#define NIL      ((value_t){ .type.main = CONS_T, .type.sub = 0 })
 #define RCHAR(X) ((value_t){ .type.main = CHAR_T, .type.sub = (X) })
 #define RINT(X)  ((value_t){ .type.main = INT_T,  .type.sub = (X) })
+#define RERR(X)  ((value_t){ .type.main = ERR_T,  .type.sub = (X) })
+
+#define ERR_EOF		1
 
 rtype_t rtypeof	(value_t v);
 
 value_t car	(value_t x);
 value_t cdr	(value_t x);
 value_t	cons	(value_t car, value_t cdr);
+bool    errp	(value_t x);
 bool    nilp	(value_t x);
 value_t rplaca	(value_t x, value_t v);
 value_t rplacd	(value_t x, value_t v);

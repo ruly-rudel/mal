@@ -17,7 +17,6 @@ static cons_t* alloc_cons(void)
 }
 
 
-
 rtype_t rtypeof(value_t v)
 {
 	return v.type.main;
@@ -25,12 +24,12 @@ rtype_t rtypeof(value_t v)
 
 value_t car(value_t x)
 {
-	return rtypeof(x) == CONS_T ? x.cons->car : NIL;
+	return rtypeof(x) == CONS_T && x.type.sub != 0 ? x.cons->car : NIL;
 }
 
 value_t cdr(value_t x)
 {
-	return rtypeof(x) == CONS_T ? x.cons->cdr : NIL;
+	return rtypeof(x) == CONS_T && x.type.sub != 0 ? x.cons->cdr : NIL;
 }
 
 
@@ -46,10 +45,14 @@ value_t	cons(value_t car, value_t cdr)
 	return r;
 }
 
+bool errp(value_t x)
+{
+	return x.type.main == ERR_T;
+}
 
 bool nilp(value_t x)
 {
-	return x.type.main == NIL_T && x.type.sub == 0;
+	return x.type.main == CONS_T && x.type.sub == 0;
 }
 
 value_t rplaca(value_t x, value_t v)
@@ -95,36 +98,32 @@ static value_t* cons_and_cdr(value_t v, value_t* c)
 
 value_t readline(FILE* fp)
 {
-	int c;
 	value_t	 r	= NIL;
 	value_t* cur	= &r;
 
-	while((c = fgetc(fp)) != EOF)
+	for(;;)
 	{
-		cur = cons_and_cdr(RCHAR(c), cur);
-
-		if(c == '\n')
+		int c = fgetc(fp);
+		if(c == EOF && nilp(r))	// 
 		{
-			r.type.main    = STR_T;
+			return RERR(ERR_EOF);
+		}
+		else if(c == '\n' || c == EOF)
+		{
+			r.type.main = STR_T;
 			return r;
 		}
+		else
+		{
+			cur = cons_and_cdr(RCHAR(c), cur);
+		}
 	}
-
-	return r;
 }
 
 void printline(value_t s, FILE* fp)
 {
-	assert(rtypeof(s) == STR_T || rtypeof(s) == NIL_T);
-	if(s.type.main == STR_T)
-	{
-		if(s.type.sub == 0)
-		{
-			s = NIL;
-		} else {
-			s.type.main = CONS_T;
-		}
-	}
+	assert(rtypeof(s) == STR_T || rtypeof(s) == CONS_T);
+	s.type.main = CONS_T;
 
 	for(; !nilp(s); s = cdr(s))
 		fputc(car(s).rint.val, fp);
@@ -145,7 +144,7 @@ typedef struct
 static void scan_to_lf(value_t *s)
 {
 	assert(s != NULL);
-	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+	assert(rtypeof(*s) == CONS_T);
 
 	while(!nilp(*s))
 	{
@@ -169,7 +168,7 @@ static void scan_to_lf(value_t *s)
 static value_t scan_to_whitespace(value_t *s)
 {
 	assert(s != NULL);
-	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+	assert(rtypeof(*s) == CONS_T);
 
 	value_t r = NIL;
 	value_t *cur = &r;
@@ -209,14 +208,15 @@ static value_t scan_to_whitespace(value_t *s)
 		}
 	}
 
-	assert(1);
-	return NIL;	// error: end of source string before doublequote
+	// must be refactored
+	r.type.main = STR_T;
+	return r;
 }
 
 static value_t scan_to_doublequote(value_t *s)
 {
 	assert(s != NULL);
-	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+	assert(rtypeof(*s) == CONS_T);
 
 	value_t r = NIL;
 	value_t *cur = &r;
@@ -259,14 +259,14 @@ static value_t scan_to_doublequote(value_t *s)
 		*s = cdr(*s);
 	}
 
-	assert(1);
+	assert(0);
 	return NIL;	// error: end of source string before doublequote
 }
 
 static value_t scan1(value_t *s)
 {
 	assert(s != NULL);
-	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
+	assert(rtypeof(*s) == CONS_T);
 
 	while(!nilp(*s))
 	{
@@ -475,21 +475,31 @@ static value_t pr_str_cons(value_t x)
 {
 	value_t r    = NIL;
 
-	while(!nilp(car(x)))
+	if(nilp(x))
 	{
-		if(nilp(r))
+		r = cons(RCHAR('n'), cons(RCHAR('i'), cons(RCHAR('l'), NIL)));
+	}
+	else
+	{
+		do
 		{
-			r = cons(RCHAR('('), NIL);
-		} else {
-			nconc(r, cons(RCHAR(' '), NIL));
-		}
+			if(nilp(r))
+			{
+				r = cons(RCHAR('('), NIL);
+			}
+			else
+			{
+				nconc(r, cons(RCHAR(' '), NIL));
+			}
 
-		nconc(r, pr_str(car(x)));
+			nconc(r, pr_str(car(x)));
 
-		x = cdr(x);
+			x = cdr(x);
+		} while(!nilp(car(x)));
+
+		nconc(r, cons(RCHAR(')'), NIL));
 	}
 
-	nconc(r, cons(RCHAR(')'), NIL));
 	r.type.main = STR_T;
 
 	return r;
@@ -502,10 +512,7 @@ value_t pr_str(value_t s)
 	    case CONS_T:
 		return pr_str_cons(s);
 
-	    case NIL_T:
-		break;
-
-	    case SYMBOL_T:
+	    case SYM_T:
 		break;
 
 	    case INT_T:
