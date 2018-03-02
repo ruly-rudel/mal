@@ -86,7 +86,11 @@ value_t nconc(value_t a, value_t b)
 }
 
 
-
+static value_t* cons_and_cdr(value_t v, value_t* c)
+{
+	*c = cons(v, NIL);
+	return &c->cons->cdr;
+}
 
 
 value_t readline(FILE* fp)
@@ -97,8 +101,7 @@ value_t readline(FILE* fp)
 
 	while((c = fgetc(fp)) != EOF)
 	{
-		*cur = cons(RCHAR(c), NIL);
-		cur  = &cur->cons->cdr;
+		cur = cons_and_cdr(RCHAR(c), cur);
 
 		if(c == '\n')
 		{
@@ -145,6 +148,7 @@ static void scan_to_lf(value_t *s)
 
 		if(c.rint.val == '\n')
 		{
+			*s = cdr(*s);
 			return ;
 		}
 		
@@ -190,8 +194,7 @@ static value_t scan_to_whitespace(value_t *s)
 		}
 		else
 		{
-			*cur = cons(c, NIL);
-			cur  = &cur->cons->cdr;
+			cur = cons_and_cdr(c, cur);
 
 			// next
 			*s = cdr(*s);
@@ -234,12 +237,12 @@ static value_t scan_to_doublequote(value_t *s)
 			}
 			else
 			{
-				*cur = cons(c, NIL);
+				cur = cons_and_cdr(c, cur);
 			}
 			break;
 
 		    case 1:	// escape
-			*cur = cons(c, NIL);
+			cur = cons_and_cdr(c, cur);
 			st = 0;
 			break;
 		}
@@ -296,11 +299,13 @@ static value_t scan(value_t *s)
 
 			    // comment
 			    case ';':
+				*s           = cdr (*s);
 				scan_to_lf(s);
 			        break;	// return to skip-white-space
 
 			    // string
 			    case '"':
+				*s           = cdr (*s);
 				return scan_to_doublequote(s);
 
 			    // atom
@@ -319,14 +324,13 @@ value_t read_str(value_t s)
 	p.type.main = CONS_T;
 
 	value_t r = NIL;
-	value_t* cur = &r;
 
 	value_t token;
+	value_t* cur = &r;
 
 	while(!nilp(token = scan(&p)))
 	{
-		*cur = cons(token, NIL);
-		cur  = &cur->cons->cdr;
+		cur = cons_and_cdr(token, cur);
 	} 
 
 	return r;
