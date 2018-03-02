@@ -76,8 +76,8 @@ value_t rplacd(value_t x, value_t v)
 
 value_t nconc(value_t a, value_t b)
 {
-	assert(rtypeof(a) == CONS_T || rtypeof(a) == STR_T);
-	assert(rtypeof(b) == CONS_T || rtypeof(b) == STR_T);
+	assert(rtypeof(a) == CONS_T || rtypeof(a) == STR_T || rtypeof(a) == SYM_T);
+	assert(rtypeof(b) == CONS_T || rtypeof(b) == STR_T || rtypeof(b) == SYM_T);
 
 	value_t i;
 	for(i.cons = aligned_addr(a); !nilp(cdr(i)); i = cdr(i))
@@ -122,7 +122,7 @@ value_t readline(FILE* fp)
 
 void printline(value_t s, FILE* fp)
 {
-	assert(rtypeof(s) == STR_T || rtypeof(s) == CONS_T);
+	assert(rtypeof(s) == STR_T || rtypeof(s) == SYM_T || rtypeof(s) == CONS_T);
 	s.type.main = CONS_T;
 
 	for(; !nilp(s); s = cdr(s))
@@ -196,7 +196,7 @@ static value_t scan_to_whitespace(value_t *s)
 		    c.rint.val == ','  
 		  )
 		{
-			r.type.main = STR_T;
+			r.type.main = SYM_T;
 			return r;
 		}
 		else
@@ -209,7 +209,7 @@ static value_t scan_to_whitespace(value_t *s)
 	}
 
 	// must be refactored
-	r.type.main = STR_T;
+	r.type.main = SYM_T;
 	return r;
 }
 
@@ -259,7 +259,7 @@ static value_t scan_to_doublequote(value_t *s)
 		*s = cdr(*s);
 	}
 
-	assert(0);
+	//assert(0);
 	return NIL;	// error: end of source string before doublequote
 }
 
@@ -302,7 +302,7 @@ static value_t scan1(value_t *s)
 			    case '@':
 				*s           = cdr (*s);
 				value_t sr   = cons(c, NIL);
-				sr.type.main = STR_T;
+				sr.type.main = SYM_T;
 				return sr;
 
 			    // comment
@@ -377,20 +377,28 @@ static value_t read_list(scan_t* st)
 	scan_next(st);	// omit '('
 	while(!nilp(token = scan_peek(st)))
 	{
-		assert(rtypeof(token) == STR_T);
-		token.type.main = CONS_T;
+		assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
 
-		value_t c = car(token);	// first char of token
-
-		assert(rtypeof(c) == CHAR_T);
-		if(c.rint.val == ')')
+		if(rtypeof(token) == SYM_T)
 		{
-			if(nilp(r))	// (nil. nil)
+			token.type.main = CONS_T;
+
+			value_t c = car(token);	// first char of token
+
+			assert(rtypeof(c) == CHAR_T);
+			if(c.rint.val == ')')
 			{
-				r = cons(NIL, NIL);
+				if(nilp(r))	// (nil. nil)
+				{
+					r = cons(NIL, NIL);
+				}
+				scan_next(st);
+				return r;
 			}
-			scan_next(st);
-			return r;
+			else
+			{
+				cur = cons_and_cdr(read_form(st), cur);
+			}
 		}
 		else
 		{
@@ -413,21 +421,32 @@ static value_t read_form(scan_t* st)
 	}
 	else
 	{
-		assert(rtypeof(token) == STR_T);
+		assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
 
-		token.type.main = CONS_T;
-		value_t tcar = car(token);
-
-		assert(rtypeof(tcar) == CHAR_T);
-		if(tcar.rint.val == '(')
+		switch(rtypeof(token))
 		{
-			return read_list(st);
-		}
-		else
-		{
-			token = scan_peek(st);
+		    case STR_T:
 			scan_next(st);
 			return token;
+
+		    case SYM_T:
+			token.type.main = CONS_T;
+			value_t tcar = car(token);
+
+			assert(rtypeof(tcar) == CHAR_T);
+			if(tcar.rint.val == '(')
+			{
+				return read_list(st);
+			}
+			else
+			{
+				token = scan_peek(st);
+				scan_next(st);
+				return token;
+			}
+		    default:
+			assert(0);
+			return NIL;	// not implemented yet
 		}
 	}
 }
@@ -513,18 +532,19 @@ value_t pr_str(value_t s)
 		return pr_str_cons(s);
 
 	    case SYM_T:
-		break;
+		return s;
 
 	    case INT_T:
 		return pr_str_int(s.rint.val);
 
 	    case STR_T:
+		s.type.main = CONS_T;
+		s = cons(RCHAR('"'), s);
+		s = nconc(s, cons(RCHAR('"'), NIL));
 		return s;
 
 	    default:
-		break;
+		return s;
 	}
-
-	return s;
 }
 
