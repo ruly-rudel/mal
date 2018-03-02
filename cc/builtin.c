@@ -129,10 +129,18 @@ void printline(value_t s, FILE* fp)
 	for(; !nilp(s); s = cdr(s))
 		fputc(car(s).rint.val, fp);
 
+	fputc('\n', fp);
 	fflush(fp);
 
 	return ;
 }
+
+
+typedef struct
+{
+	value_t		cur;
+	value_t		token;
+} scan_t;
 
 static void scan_to_lf(value_t *s)
 {
@@ -255,7 +263,7 @@ static value_t scan_to_doublequote(value_t *s)
 	return NIL;	// error: end of source string before doublequote
 }
 
-static value_t scan(value_t *s)
+static value_t scan1(value_t *s)
 {
 	assert(s != NULL);
 	assert(rtypeof(*s) == NIL_T || rtypeof(*s) == CONS_T);
@@ -318,22 +326,117 @@ static value_t scan(value_t *s)
 	return NIL;	// no form or atom
 }
 
-value_t read_str(value_t s)
+static scan_t scan_init(value_t str)
 {
-	value_t p = s;
-	p.type.main = CONS_T;
-
-	value_t r = NIL;
-
-	value_t token;
-	value_t* cur = &r;
-
-	while(!nilp(token = scan(&p)))
+	scan_t r = { 0 };
+	r.cur    = str;
+	if(r.cur.type.main == STR_T)
 	{
-		cur = cons_and_cdr(token, cur);
-	} 
+		r.cur.type.main = CONS_T;
+	}
+	r.token  = scan1(&r.cur);
 
 	return r;
+}
+
+static value_t scan_next(scan_t *s)
+{
+	assert(s != NULL);
+
+	s->token = scan1(&s->cur);
+	return s->token;
+}
+
+static value_t scan_peek(scan_t *s)
+{
+	assert(s != NULL);
+
+	return s->token;
+}
+
+/*
+static bool scan_is_end(scan_t *s)
+{
+	assert(s != NULL);
+
+	return nilp(s->cur);
+}
+*/
+
+static value_t read_form(scan_t* st);
+
+static value_t read_list(scan_t* st)
+{
+	assert(st != NULL);
+
+	value_t r = NIL;
+	value_t *cur = &r;
+
+	value_t token;
+
+	scan_next(st);	// omit '('
+	while(!nilp(token = scan_peek(st)))
+	{
+		assert(rtypeof(token) == STR_T);
+		token.type.main = CONS_T;
+
+		value_t c = car(token);	// first char of token
+
+		assert(rtypeof(c) == CHAR_T);
+		if(c.rint.val == ')')
+		{
+			if(nilp(r))	// (nil. nil)
+			{
+				r = cons(NIL, NIL);
+			}
+			scan_next(st);
+			return r;
+		}
+		else
+		{
+			cur = cons_and_cdr(read_form(st), cur);
+		}
+	}
+
+	assert(1);
+	return NIL;	// error: end of token before ')'
+}
+
+static value_t read_form(scan_t* st)
+{
+	assert(st != NULL);
+
+	value_t token = scan_peek(st);
+	if(nilp(token))	// no token
+	{
+		return NIL;
+	}
+	else
+	{
+		assert(rtypeof(token) == STR_T);
+
+		token.type.main = CONS_T;
+		value_t tcar = car(token);
+
+		assert(rtypeof(tcar) == CHAR_T);
+		if(tcar.rint.val == '(')
+		{
+			return read_list(st);
+		}
+		else
+		{
+			token = scan_peek(st);
+			scan_next(st);
+			return token;
+		}
+	}
+}
+
+value_t read_str(value_t s)
+{
+	scan_t st = scan_init(s);
+
+	return read_form(&st);
 }
 
 
