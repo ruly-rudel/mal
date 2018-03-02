@@ -173,6 +173,15 @@ static value_t scan_to_whitespace(value_t *s)
 		if( c.rint.val == ' '  ||
 		    c.rint.val == '\t' ||
 		    c.rint.val == '\n' ||
+		    c.rint.val == '('  ||
+		    c.rint.val == ')'  ||
+		    c.rint.val == '['  ||
+		    c.rint.val == ']'  ||
+		    c.rint.val == '{'  ||
+		    c.rint.val == '}'  ||
+		    c.rint.val == ';'  ||
+		    c.rint.val == '\'' ||
+		    c.rint.val == '"'  ||
 		    c.rint.val == ','  
 		  )
 		{
