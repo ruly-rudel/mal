@@ -402,6 +402,76 @@ static bool scan_is_end(scan_t *s)
 }
 */
 
+static value_t parse_int(value_t token)
+{
+	assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
+	token.type.main = CONS_T;
+
+	// sign (if exists)
+	value_t tcar = car(token);
+	assert(rtypeof(tcar) == CHAR_T);
+	int64_t sign = 1;
+	if(tcar.rint.val == '-' || tcar.rint.val == '+')
+	{
+		if(tcar.rint.val == '-')
+		{
+			sign = -1;
+		}
+
+		// next character
+		token = cdr(token);
+		assert(rtypeof(token) == CONS_T);
+
+		if(nilp(token))	// not int
+		{
+			return RERR(ERR_PARSE);
+		}
+
+		tcar  = car(token);
+		assert(rtypeof(tcar) == CHAR_T);
+	}
+
+	// value
+	uint64_t val = 0;
+	while(!nilp(token))
+	{
+		tcar = car(token);
+		assert(rtypeof(tcar) == CHAR_T);
+
+		int cv = tcar.rint.val - '0';
+		if(cv >= 0 && cv <= 9)
+		{
+			val *= 10;
+			val += cv;
+			token = cdr(token);
+			assert(rtypeof(token) == CONS_T);
+		}
+		else
+		{
+			return RERR(ERR_PARSE);
+		}
+	}
+
+	return RINT(sign * val);
+}
+
+static value_t read_atom(scan_t* st)
+{
+	value_t token = scan_peek(st);
+
+	if(rtypeof(token) == SYM_T)
+	{
+		value_t rint = parse_int(token);
+		if(!errp(rint))
+		{
+			token = rint;
+		}
+	}
+
+	scan_next(st);
+	return token;
+}
+
 static value_t read_form(scan_t* st);
 
 static value_t read_list(scan_t* st)
@@ -468,31 +538,27 @@ static value_t read_form(scan_t* st)
 	else
 	{
 		assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
-
-		switch(rtypeof(token))
+		if(rtypeof(token) == SYM_T)
 		{
-		    case STR_T:
-			scan_next(st);
-			return token;
+			value_t tcons   = token;
+			tcons.type.main = CONS_T;
+			assert(!nilp(tcons));
 
-		    case SYM_T:
-			token.type.main = CONS_T;
-			value_t tcar = car(token);
-
+			value_t tcar = car(tcons);
 			assert(rtypeof(tcar) == CHAR_T);
+
 			if(tcar.rint.val == '(')
 			{
 				return read_list(st);
 			}
 			else
 			{
-				token = scan_peek(st);
-				scan_next(st);
-				return token;
+				return read_atom(st);
 			}
-		    default:
-			assert(0);
-			return NIL;	// not implemented yet
+		}
+		else
+		{
+			return read_atom(st);
 		}
 	}
 }
