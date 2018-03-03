@@ -43,11 +43,17 @@ int main(int argc, char* argv[])
 		r = read(stdin);
 		if(errp(r))
 		{
-			fprintf(stdout, "\n");
-			break;
+			if(r.type.sub == ERR_EOF)
+			{
+				fprintf(stdout, "\n");
+				break;
+			} 
 		}
-		e = eval(r);
-		print(e, stdout);
+		else
+		{
+			e = eval(r);
+			print(e, stdout);
+		}
 	}
 
 	return 0;

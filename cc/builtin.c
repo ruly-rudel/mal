@@ -24,12 +24,26 @@ rtype_t rtypeof(value_t v)
 
 value_t car(value_t x)
 {
-	return rtypeof(x) == CONS_T && x.type.sub != 0 ? x.cons->car : NIL;
+	if(rtypeof(x) == CONS_T)
+	{
+		return x.type.sub != 0 ? x.cons->car : NIL;
+	}
+	else
+	{
+		return RERR(ERR_TYPE);
+	}
 }
 
 value_t cdr(value_t x)
 {
-	return rtypeof(x) == CONS_T && x.type.sub != 0 ? x.cons->cdr : NIL;
+	if(rtypeof(x) == CONS_T)
+	{
+		return x.type.sub != 0 ? x.cons->cdr : NIL;
+	}
+	else
+	{
+		return RERR(ERR_TYPE);
+	}
 }
 
 
@@ -57,33 +71,59 @@ bool nilp(value_t x)
 
 value_t rplaca(value_t x, value_t v)
 {
-	assert(rtypeof(x) == CONS_T || rtypeof(x) == STR_T);
-	cons_t* c = aligned_addr(x);
-	c->car = v;
-	
+	if(rtypeof(x) == CONS_T || rtypeof(x) == STR_T)
+	{
+		cons_t* c = aligned_addr(x);
+		c->car = v;
+	}
+	else
+	{
+		x = RERR(ERR_TYPE);
+	}
+
 	return x;
 }
 
 value_t rplacd(value_t x, value_t v)
 {
-	assert(rtypeof(x) == CONS_T || rtypeof(x) == STR_T);
-	cons_t* c = aligned_addr(x);
-	c->cdr = v;
-	
+	if(rtypeof(x) == CONS_T || rtypeof(x) == STR_T)
+	{
+		cons_t* c = aligned_addr(x);
+		c->cdr = v;
+	}
+	else
+	{
+		x = RERR(ERR_TYPE);
+	}
+
 	return x;
 }
 
+value_t last(value_t x)
+{
+	if(rtypeof(x) == CONS_T || rtypeof(x) == STR_T || rtypeof(x) == SYM_T)
+	{
+		value_t i;
+		for(i.cons = aligned_addr(x); !nilp(cdr(i)); i = cdr(i))
+			;
+
+		return i;
+	}
+	else
+	{
+		return RERR(ERR_TYPE);
+	}
+}
 
 value_t nconc(value_t a, value_t b)
 {
 	assert(rtypeof(a) == CONS_T || rtypeof(a) == STR_T || rtypeof(a) == SYM_T);
-	assert(rtypeof(b) == CONS_T || rtypeof(b) == STR_T || rtypeof(b) == SYM_T);
 
-	value_t i;
-	for(i.cons = aligned_addr(a); !nilp(cdr(i)); i = cdr(i))
-		;
-	b.type.main = CONS_T;
-	rplacd(i, b);
+	if(rtypeof(b) == STR_T || rtypeof(b) == SYM_T)
+	{
+		b.type.main = CONS_T;
+	}
+	rplacd(last(a), b);
 
 	return a;
 }
@@ -259,8 +299,7 @@ static value_t scan_to_doublequote(value_t *s)
 		*s = cdr(*s);
 	}
 
-	//assert(0);
-	return NIL;	// error: end of source string before doublequote
+	return RERR(ERR_PARSE);	// error: end of source string before doublequote
 }
 
 static value_t scan1(value_t *s)
@@ -377,9 +416,13 @@ static value_t read_list(scan_t* st)
 	scan_next(st);	// omit '('
 	while(!nilp(token = scan_peek(st)))
 	{
-		assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
+		assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T || errp(token));
 
-		if(rtypeof(token) == SYM_T)
+		if(errp(token))
+		{
+			return token;	// scan error
+		}
+		else if(rtypeof(token) == SYM_T)
 		{
 			token.type.main = CONS_T;
 
@@ -406,8 +449,7 @@ static value_t read_list(scan_t* st)
 		}
 	}
 
-	assert(1);
-	return NIL;	// error: end of token before ')'
+	return RERR(ERR_PARSE);	// error: end of token before ')'
 }
 
 static value_t read_form(scan_t* st)
@@ -418,6 +460,10 @@ static value_t read_form(scan_t* st)
 	if(nilp(token))	// no token
 	{
 		return NIL;
+	}
+	else if(errp(token))	// scan error
+	{
+		return token;
 	}
 	else
 	{

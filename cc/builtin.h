@@ -46,7 +46,9 @@ typedef struct _cons_t
 #define RINT(X)  ((value_t){ .type.main = INT_T,  .type.sub = (X) })
 #define RERR(X)  ((value_t){ .type.main = ERR_T,  .type.sub = (X) })
 
-#define ERR_EOF		1
+#define ERR_TYPE	1
+#define ERR_EOF		2
+#define ERR_PARSE	3
 
 rtype_t rtypeof	(value_t v);
 
@@ -57,6 +59,7 @@ bool    errp	(value_t x);
 bool    nilp	(value_t x);
 value_t rplaca	(value_t x, value_t v);
 value_t rplacd	(value_t x, value_t v);
+value_t last	(value_t x);
 value_t nconc	(value_t a, value_t b);
 
 value_t readline	(FILE* fp);
