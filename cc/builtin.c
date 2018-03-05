@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "builtin.h"
 
+#define MAL
 
 static cons_t* aligned_addr(value_t v)
 {
@@ -501,9 +502,9 @@ static value_t read_list(scan_t* st)
 			assert(rtypeof(c) == CHAR_T);
 			if(c.rint.val == ')')
 			{
-				if(nilp(r))	// (nil. nil)
+				if(nilp(r))	// () is nill
 				{
-					r = cons(NIL, NIL);
+					r = NIL;
 				}
 				scan_next(st);
 				return r;
@@ -604,11 +605,17 @@ static value_t pr_str_int(int64_t x)
 
 static value_t pr_str_cons(value_t x)
 {
+	assert(rtypeof(x) == CONS_T);
 	value_t r    = NIL;
 
 	if(nilp(x))
 	{
+#ifdef MAL
+		r = cons(RCHAR('('), cons(RCHAR(')'), NIL));
+#else // MAL
 		r = cons(RCHAR('n'), cons(RCHAR('i'), cons(RCHAR('l'), NIL)));
+#endif // MAL
+
 	}
 	else
 	{
@@ -636,6 +643,35 @@ static value_t pr_str_cons(value_t x)
 	return r;
 }
 
+value_t pr_str_str(value_t s)
+{
+	assert(rtypeof(s) == STR_T);
+	s.type.main = CONS_T;
+
+	value_t r = cons(RCHAR('"'), NIL);
+	value_t *cur = &r.cons->cdr;
+
+	while(!nilp(s))
+	{
+		value_t tcar = car(s);
+		assert(rtypeof(tcar) == CHAR_T);
+
+		if(tcar.rint.val == '"')	// escape
+		{
+			cur = cons_and_cdr(RCHAR('\\'), cur);
+		}
+		cur = cons_and_cdr(tcar, cur);
+
+		s = cdr(s);
+		assert(rtypeof(s) == CONS_T);
+	}
+
+	*cur = cons(RCHAR('"'), NIL);
+
+	r.type.main = STR_T;
+	return r;
+}
+
 value_t pr_str(value_t s)
 {
 	switch(rtypeof(s))
@@ -650,10 +686,7 @@ value_t pr_str(value_t s)
 		return pr_str_int(s.rint.val);
 
 	    case STR_T:
-		s.type.main = CONS_T;
-		s = cons(RCHAR('"'), s);
-		s = nconc(s, cons(RCHAR('"'), NIL));
-		return s;
+		return pr_str_str(s);
 
 	    default:
 		return s;
