@@ -15,7 +15,7 @@ typedef struct
 
 typedef struct
 {
-	int64_t		dummy:  3;
+	int64_t		type :  3;
 	int64_t		val:   61;
 } rint_t;
 
@@ -42,8 +42,8 @@ typedef struct _cons_t
 
 
 #define NIL      ((value_t){ .type.main = CONS_T, .type.sub = 0 })
-#define RCHAR(X) ((value_t){ .type.main = CHAR_T, .type.sub = (X) })
-#define RINT(X)  ((value_t){ .type.main = INT_T,  .type.sub = (X) })
+#define RCHAR(X) ((value_t){ .rint.type = CHAR_T, .rint.val = (X) })
+#define RINT(X)  ((value_t){ .rint.type = INT_T,  .rint.val = (X) })
 #define RERR(X)  ((value_t){ .type.main = ERR_T,  .type.sub = (X) })
 
 #define ERR_TYPE	1
