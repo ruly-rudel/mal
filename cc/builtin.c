@@ -60,6 +60,14 @@ value_t	cons(value_t car, value_t cdr)
 	return r;
 }
 
+value_t	cloj(value_t car, value_t cdr)
+{
+	value_t	r	= cons(car, cdr);
+	r.type.main	= FN_T;
+
+	return r;
+}
+
 bool errp(value_t x)
 {
 	return x.type.main == OTH_T && x.type.sub == ERR_T;
@@ -104,11 +112,18 @@ value_t last(value_t x)
 {
 	if(rtypeof(x) == CONS_T || rtypeof(x) == STR_T || rtypeof(x) == SYM_T)
 	{
-		value_t i;
-		for(i.cons = aligned_addr(x); !nilp(cdr(i)); i = cdr(i))
-			;
-
-		return i;
+		if(nilp(x))
+		{
+			return NIL;
+		}
+		else
+		{
+			value_t i;
+			for(i.cons = aligned_addr(x); !nilp(cdr(i)); i = cdr(i))
+				;
+	
+			return i;
+		}
 	}
 	else
 	{
@@ -120,11 +135,20 @@ value_t nconc(value_t a, value_t b)
 {
 	assert(rtypeof(a) == CONS_T || rtypeof(a) == STR_T || rtypeof(a) == SYM_T);
 
-	if(rtypeof(b) == STR_T || rtypeof(b) == SYM_T)
+
+	value_t l = last(a);
+	if(nilp(l))
 	{
-		b.type.main = CONS_T;
+		a = b;
 	}
-	rplacd(last(a), b);
+	else
+	{
+		if(rtypeof(b) == STR_T || rtypeof(b) == SYM_T)
+		{
+			b.type.main = CONS_T;
+		}
+		rplacd(l, b);
+	}
 
 	return a;
 }
@@ -394,15 +418,6 @@ static value_t scan_peek(scan_t *s)
 	return s->token;
 }
 
-/*
-static bool scan_is_end(scan_t *s)
-{
-	assert(s != NULL);
-
-	return nilp(s->cur);
-}
-*/
-
 static value_t parse_int(value_t token)
 {
 	assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
@@ -611,9 +626,9 @@ static value_t pr_str_cons(value_t x)
 	if(nilp(x))
 	{
 #ifdef MAL
-		r = cons(RCHAR('('), cons(RCHAR(')'), NIL));
+		r = str_to_rstr("()");
 #else // MAL
-		r = cons(RCHAR('n'), cons(RCHAR('i'), cons(RCHAR('l'), NIL)));
+		r = str_to_rstr("nil");
 #endif // MAL
 
 	}
@@ -623,19 +638,30 @@ static value_t pr_str_cons(value_t x)
 		{
 			if(nilp(r))
 			{
-				r = cons(RCHAR('('), NIL);
+				//r = cons(RCHAR('('), NIL);
+				r = str_to_rstr("(");
 			}
 			else
 			{
-				nconc(r, cons(RCHAR(' '), NIL));
+				//nconc(r, cons(RCHAR(' '), NIL));
+				nconc(r, str_to_rstr(" "));
 			}
 
-			nconc(r, pr_str(car(x)));
+			if(rtypeof(x) == CONS_T)
+			{
+				nconc(r, pr_str(car(x)));
+				x = cdr(x);
+			}
+			else	// dotted
+			{
+				nconc(r, str_to_rstr(". "));
+				nconc(r, pr_str(x));
+				x = NIL;
+			}
+		} while(!nilp(x));
 
-			x = cdr(x);
-		} while(!nilp(car(x)));
-
-		nconc(r, cons(RCHAR(')'), NIL));
+		//nconc(r, cons(RCHAR(')'), NIL));
+		nconc(r, str_to_rstr(")"));
 	}
 
 	r.type.main = STR_T;
@@ -672,6 +698,18 @@ value_t pr_str_str(value_t s)
 	return r;
 }
 
+static value_t pr_str_fn(value_t s)
+{
+	assert(rtypeof(s) == FN_T);
+	s.type.main = CONS_T;
+
+	value_t r = str_to_rstr("(#<FUNCTION> . ");
+	nconc(r, pr_str(cdr(s)));
+	nconc(r, str_to_rstr(")"));
+
+	return r;
+}
+
 value_t pr_str(value_t s)
 {
 	switch(rtypeof(s))
@@ -688,8 +726,104 @@ value_t pr_str(value_t s)
 	    case STR_T:
 		return pr_str_str(s);
 
+	    case FN_T:
+		return pr_str_fn(s);
+
 	    default:
 		return s;
 	}
 }
+
+bool eq(value_t x, value_t y)
+{
+	return x.raw == y.raw;
+}
+
+bool equal(value_t x, value_t y)
+{
+	if(eq(x, y))
+	{
+		return true;
+	}
+	else if(rtypeof(x) != rtypeof(y))
+	{
+		return false;
+	}
+	else if(rtypeof(x) == CONS_T || rtypeof(x) == SYM_T || rtypeof(x) == STR_T)
+	{
+		x.type.main = CONS_T;
+		y.type.main = CONS_T;
+
+		return equal(car(x), car(y)) && equal(cdr(x), cdr(y));
+	}
+	else
+	{
+		return false;
+	}
+}
+
+value_t str_to_cons	(const char* s)
+{
+	assert(s != NULL);
+	value_t    r = NIL;
+	value_t* cur = &r;
+
+	int c;
+	while((c = *s++) != '\0')
+	{
+		cur = cons_and_cdr(RCHAR(c), cur);
+	}
+
+	return r;
+}
+
+value_t str_to_sym	(const char* s)
+{
+	value_t r = str_to_cons(s);
+	r.type.main = SYM_T;
+
+	return r;
+}
+
+value_t str_to_rstr	(const char* s)
+{
+	value_t r = str_to_cons(s);
+	r.type.main = STR_T;
+
+	return r;
+}
+
+value_t list(int n, ...)
+{
+	va_list	 arg;
+	value_t    r = NIL;
+	value_t* cur = &r;
+
+	va_start(arg, n);
+	for(int i = 0; i < n; i++)
+	{
+		cur = cons_and_cdr(va_arg(arg, value_t), cur);
+	}
+
+	va_end(arg);
+
+	return r;
+}
+
+value_t eval_ast	(value_t ast)
+{
+	switch(rtypeof(ast))
+	{
+	    case SYM_T:
+		return ast;
+
+	    case CONS_T:
+		return ast;
+
+	    default:
+		return ast;
+	}
+}
+
+
 

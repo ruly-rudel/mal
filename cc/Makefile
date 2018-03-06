@@ -13,7 +13,7 @@ LDFLAGS=-O3 $(DEBUG) $(LIBPATHS) -L.
 
 #LIBSOURCES=Core.cpp Environment.cpp Reader.cpp ReadLine.cpp String.cpp \
 #			Types.cpp Validation.cpp
-LIBSOURCES=builtin.c
+LIBSOURCES=builtin.c env.c
 LIBOBJS=$(LIBSOURCES:%.c=%.o)
 
 MAINS=$(wildcard step*.c)

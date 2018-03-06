@@ -2,6 +2,7 @@
 #define DEF_EXTERN
 #include <stdio.h>
 #include "builtin.h"
+#include "env.h"
 
 value_t read(FILE* fp)
 {
@@ -18,7 +19,8 @@ value_t read(FILE* fp)
 
 value_t eval(value_t v)
 {
-	return v;
+	return init_env();
+	//return v;
 }
 
 void print(value_t s, FILE* fp)

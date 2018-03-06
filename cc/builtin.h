@@ -2,8 +2,10 @@
 #define _builtin_h_
 
 #include "misc.h"
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 typedef enum _rtype_t {
 	// main 8types (content is address)
@@ -48,6 +50,8 @@ typedef union
 	rint_t		rint;
 	rfloat_t	rfloat;
 	struct _cons_t*	cons;
+	uint64_t	raw;
+	void*		ptr;
 } value_t;
 
 typedef struct _cons_t
@@ -63,10 +67,12 @@ typedef struct _cons_t
 #define RCHAR(X)  ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
 #define RINT(X)   ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
 #define RFLOAT(X) ((value_t){ .rfloat.type = FLOAT_T << 3 | OTH_T, .rfloat.val = (X) })
+#define RFN(X)    ((value_t){ .ptr = (X) })
 
 #define ERR_TYPE	1
 #define ERR_EOF		2
 #define ERR_PARSE	3
+#define ERR_NOTFOUND	4
 
 rtype_t rtypeof	(value_t v);
 
@@ -79,10 +85,19 @@ value_t rplaca	(value_t x, value_t v);
 value_t rplacd	(value_t x, value_t v);
 value_t last	(value_t x);
 value_t nconc	(value_t a, value_t b);
+bool	eq	(value_t x, value_t y);
+bool	equal	(value_t x, value_t y);
+value_t list	(int n, ...);
+value_t	cloj	(value_t fn, value_t env);
+
+value_t str_to_cons	(const char* s);
+value_t str_to_rstr	(const char* s);
+value_t str_to_sym	(const char* s);
 
 value_t readline	(FILE* fp);
 value_t read_str	(value_t s);
 void    printline	(value_t s, FILE* fp);
 value_t pr_str		(value_t s);
+value_t eval_ast	(value_t ast);
 
 #endif // _builtin_h_
