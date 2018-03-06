@@ -5,23 +5,39 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum _rtype_t { CONS_T = 0, SYM_T, INT_T, FLOAT_T, CHAR_T, STR_T, ERR_T, USR_T } rtype_t;
+typedef enum _rtype_t {
+	// main 8types (content is address)
+	CONS_T = 0,
+	SYM_T,
+	STR_T,
+	FN_T,
+	MACRO_T,
+	VEC_T,
+	HASH_T,
+	OTH_T,
+
+	// sub types (content is value)
+	INT_T,
+	FLOAT_T,
+	ERR_T
+} rtype_t;
 
 typedef struct
 {
 	uint64_t	main:   3;
-	uint64_t	sub:   61;
+	uint64_t	sub:   29;
+	uint64_t	val:   32;
 } type_t;
 
 typedef struct
 {
-	int64_t		type :  3;
-	int64_t		val:   61;
+	int64_t		type:  32;
+	int64_t		val:   32;
 } rint_t;
 
 typedef struct
 {
-	float		dummy;
+	uint32_t	type;
 	float		val;
 } rfloat_t;
 
@@ -41,10 +57,12 @@ typedef struct _cons_t
 } cons_t;
 
 
-#define NIL      ((value_t){ .type.main = CONS_T, .type.sub = 0 })
-#define RCHAR(X) ((value_t){ .rint.type = CHAR_T, .rint.val = (X) })
-#define RINT(X)  ((value_t){ .rint.type = INT_T,  .rint.val = (X) })
-#define RERR(X)  ((value_t){ .type.main = ERR_T,  .type.sub = (X) })
+#define NIL       ((value_t){ .type.main   = CONS_T,  .type.sub   = 0,     .type.val = 0   })
+#define RERR(X)   ((value_t){ .type.main   = OTH_T,   .type.sub   = ERR_T, .type.val = (X) })
+
+#define RCHAR(X)  ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
+#define RINT(X)   ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
+#define RFLOAT(X) ((value_t){ .rfloat.type = FLOAT_T << 3 | OTH_T, .rfloat.val = (X) })
 
 #define ERR_TYPE	1
 #define ERR_EOF		2

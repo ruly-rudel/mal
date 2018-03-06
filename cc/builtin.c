@@ -20,7 +20,7 @@ static cons_t* alloc_cons(void)
 
 rtype_t rtypeof(value_t v)
 {
-	return v.type.main;
+	return v.type.main == OTH_T ? v.type.sub : v.type.main;
 }
 
 value_t car(value_t x)
@@ -62,12 +62,12 @@ value_t	cons(value_t car, value_t cdr)
 
 bool errp(value_t x)
 {
-	return x.type.main == ERR_T;
+	return x.type.main == OTH_T && x.type.sub == ERR_T;
 }
 
 bool nilp(value_t x)
 {
-	return x.type.main == CONS_T && x.type.sub == 0;
+	return x.type.main == CONS_T && x.type.sub == 0 && x.type.val == 0;
 }
 
 value_t rplaca(value_t x, value_t v)
@@ -192,7 +192,7 @@ static void scan_to_lf(value_t *s)
 		assert(rtypeof(*s) == CONS_T);
 
 		value_t c = car(*s);	// current char
-		assert(rtypeof(c) == CHAR_T);
+		assert(rtypeof(c) == INT_T);
 
 		if(c.rint.val == '\n')
 		{
@@ -220,7 +220,7 @@ static value_t scan_to_whitespace(value_t *s)
 
 		value_t c = car(*s);	// current char
 
-		assert(rtypeof(c) == CHAR_T);
+		assert(rtypeof(c) == INT_T);
 
 		if( c.rint.val == ' '  ||
 		    c.rint.val == '\t' ||
@@ -269,7 +269,7 @@ static value_t scan_to_doublequote(value_t *s)
 
 		value_t c = car(*s);	// current char
 
-		assert(rtypeof(c) == CHAR_T);
+		assert(rtypeof(c) == INT_T);
 
 		switch(st)
 		{
@@ -313,7 +313,7 @@ static value_t scan1(value_t *s)
 		assert(rtypeof(*s) == CONS_T);
 
 		value_t c = car(*s);	// current char
-		assert(rtypeof(c) == CHAR_T);
+		assert(rtypeof(c) == INT_T);
 
 		// skip white space
 		if( c.rint.val == ' '  ||
@@ -410,7 +410,7 @@ static value_t parse_int(value_t token)
 
 	// sign (if exists)
 	value_t tcar = car(token);
-	assert(rtypeof(tcar) == CHAR_T);
+	assert(rtypeof(tcar) == INT_T);
 	int64_t sign = 1;
 	if(tcar.rint.val == '-' || tcar.rint.val == '+')
 	{
@@ -429,7 +429,7 @@ static value_t parse_int(value_t token)
 		}
 
 		tcar  = car(token);
-		assert(rtypeof(tcar) == CHAR_T);
+		assert(rtypeof(tcar) == INT_T);
 	}
 
 	// value
@@ -437,7 +437,7 @@ static value_t parse_int(value_t token)
 	while(!nilp(token))
 	{
 		tcar = car(token);
-		assert(rtypeof(tcar) == CHAR_T);
+		assert(rtypeof(tcar) == INT_T);
 
 		int cv = tcar.rint.val - '0';
 		if(cv >= 0 && cv <= 9)
@@ -499,7 +499,7 @@ static value_t read_list(scan_t* st)
 
 			value_t c = car(token);	// first char of token
 
-			assert(rtypeof(c) == CHAR_T);
+			assert(rtypeof(c) == INT_T);
 			if(c.rint.val == ')')
 			{
 				if(nilp(r))	// () is nill
@@ -546,7 +546,7 @@ static value_t read_form(scan_t* st)
 			assert(!nilp(tcons));
 
 			value_t tcar = car(tcons);
-			assert(rtypeof(tcar) == CHAR_T);
+			assert(rtypeof(tcar) == INT_T);
 
 			if(tcar.rint.val == '(')
 			{
@@ -654,7 +654,7 @@ value_t pr_str_str(value_t s)
 	while(!nilp(s))
 	{
 		value_t tcar = car(s);
-		assert(rtypeof(tcar) == CHAR_T);
+		assert(rtypeof(tcar) == INT_T);
 
 		if(tcar.rint.val == '"')	// escape
 		{
