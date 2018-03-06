@@ -1,19 +1,15 @@
 
-#CXX=g++-5
 CC=gcc-5
 
 LD=$(CC)
 AR=ar
 
 DEBUG=-ggdb
-CFLAGS=-O3 -Wall $(DEBUG) $(INCPATHS) -std=c11
-LDFLAGS=-O3 $(DEBUG) $(LIBPATHS) -L.
-#CXXFLAGS=-O3 -Wall $(DEBUG) $(INCPATHS) -std=c++14
-#LDFLAGS=-O3 $(DEBUG) $(LIBPATHS) -L. -lreadline -lhistory
+OPT=-O3
+CFLAGS=$(OPT) -Wall $(DEBUG) $(INCPATHS) -std=c11
+LDFLAGS=$(OPT) $(DEBUG) $(LIBPATHS) -L.
 
-#LIBSOURCES=Core.cpp Environment.cpp Reader.cpp ReadLine.cpp String.cpp \
-#			Types.cpp Validation.cpp
-LIBSOURCES=builtin.c env.c
+LIBSOURCES=builtin.c scanner.c reader.c printer.c eval.c env.c
 LIBOBJS=$(LIBSOURCES:%.c=%.o)
 
 MAINS=$(wildcard step*.c)

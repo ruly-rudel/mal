@@ -1,8 +1,12 @@
 #include <assert.h>
+#include "builtin.h"
 #include "env.h"
 
 
-value_t add(value_t a, value_t b)
+/////////////////////////////////////////////////////////////////////
+// private: support functions searching environment with symbol-string
+
+static value_t add(value_t a, value_t b)
 {
 	return RINT(a.rint.val + b.rint.val);
 }
@@ -30,6 +34,10 @@ static value_t search_alist(value_t list, value_t key)
 	}
 }
 
+
+
+/////////////////////////////////////////////////////////////////////
+// public: Environment create, search and modify functions
 
 value_t	init_env	(void)
 {
@@ -107,3 +115,5 @@ value_t	get_env_value	(value_t env, value_t key)
 	}
 }
 
+// End of File
+/////////////////////////////////////////////////////////////////////

@@ -2,6 +2,8 @@
 #define DEF_EXTERN
 #include <stdio.h>
 #include "builtin.h"
+#include "reader.h"
+#include "printer.h"
 
 value_t read(FILE* fp)
 {

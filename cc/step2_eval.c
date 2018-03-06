@@ -2,7 +2,10 @@
 #define DEF_EXTERN
 #include <stdio.h>
 #include "builtin.h"
+#include "reader.h"
+#include "printer.h"
 #include "env.h"
+#include "eval.h"
 
 value_t read(FILE* fp)
 {
@@ -25,7 +28,7 @@ value_t eval(value_t v)
 
 void print(value_t s, FILE* fp)
 {
-	printline(pr_str(s), fp);
+	printline(pr_str(s, NIL), fp);
 	return;
 }
 

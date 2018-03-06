@@ -94,10 +94,6 @@ value_t str_to_cons	(const char* s);
 value_t str_to_rstr	(const char* s);
 value_t str_to_sym	(const char* s);
 
-value_t readline	(FILE* fp);
-value_t read_str	(value_t s);
-void    printline	(value_t s, FILE* fp);
-value_t pr_str		(value_t s);
-value_t eval_ast	(value_t ast);
+value_t* cons_and_cdr(value_t v, value_t* c);
 
 #endif // _builtin_h_

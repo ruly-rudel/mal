@@ -2,8 +2,6 @@
 #define _env_h_
 
 #include "misc.h"
-#include <stdint.h>
-#include <stdbool.h>
 #include "builtin.h"
 
 value_t	init_env	(void);
