@@ -5,8 +5,8 @@
 #include "builtin.h"
 
 value_t	init_env	(void);
-value_t	set_env		(value_t env, value_t key, value_t val);
-value_t	find_env	(value_t env, value_t key);
-value_t	get_env_value	(value_t env, value_t key);
+value_t	set_env		(value_t key, value_t val, value_t env);
+value_t	find_env	(value_t key, value_t env);
+value_t	get_env_value	(value_t key, value_t env);
 
 #endif // _env_h_

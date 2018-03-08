@@ -206,7 +206,52 @@ bool equal(value_t x, value_t y)
 	}
 }
 
+value_t copy_list(value_t list)
+{
+	assert(rtypeof(list) == CONS_T || rtypeof(list) == SYM_T || rtypeof(list) == STR_T);
+	unsigned int type = list.type.main;
+	list.type.main = CONS_T;
+	value_t    r = NIL;
+	value_t* cur = &r;
 
+	while(!nilp(list))
+	{
+		cur = cons_and_cdr(car(list), cur);
+		list = cdr(list);
+	}
+
+	r.type.main = type;
+	return r;
+}
+
+value_t assoc(value_t key, value_t list)
+{
+	assert(rtypeof(list) == CONS_T);
+
+	if(nilp(list))
+	{
+		return NIL;
+	}
+	else
+	{
+		for(value_t v = list; !nilp(v); v = cdr(v))
+		{
+			value_t vcar = car(v);
+			assert(rtypeof(vcar) == CONS_T);
+
+			if(equal(car(vcar), key))
+				return vcar;
+		}
+
+		return NIL;
+	}
+}
+
+value_t acons(value_t key, value_t val, value_t list)
+{
+	assert(rtypeof(list) == CONS_T);
+	return cons(cons(key, val), list);
+}
 
 /////////////////////////////////////////////////////////////////////
 // public: bridge functions from C to LISP

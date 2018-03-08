@@ -75,7 +75,7 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 				// check cyclic
 				if(!nilp(cyclic))
 				{
-					value_t ex = search_alist(cdr(cyclic), x);
+					value_t ex = assoc(x, cdr(cyclic));
 					if(nilp(ex))
 					{
 						nconc(cyclic, cons(cons(x, NIL), NIL));
@@ -154,13 +154,17 @@ static value_t pr_str_str(value_t s)
 static value_t pr_str_fn(value_t s, value_t cyclic)
 {
 	assert(rtypeof(s) == FN_T);
-	s.type.main = CONS_T;
 
+#ifdef PRINT_CLOS_ENV
+	s.type.main = CONS_T;
 	value_t r = str_to_rstr("(#<FUNCTION> . ");
 	nconc(r, pr_str(cdr(s), cyclic));
 	nconc(r, str_to_rstr(")"));
 
 	return r;
+#else  // PRINT_CLOS_ENV
+	return str_to_rstr("#<FUNCTION>");
+#endif // PRINT_CLOS_ENV
 }
 
 
@@ -190,7 +194,7 @@ value_t pr_str(value_t s, value_t cyclic)
 		return pr_str_cons(s, cyclic);
 
 	    case SYM_T:
-		return s;
+		return copy_list(s);
 
 	    case INT_T:
 		return pr_str_int(s.rint.val);

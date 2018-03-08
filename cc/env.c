@@ -35,24 +35,23 @@ static value_t div(value_t a, value_t b)
 value_t	init_env	(void)
 {
 	value_t env = cons(NIL, NIL);
-	set_env(env, str_to_sym("+"), cloj(RFN(add), env));
-	set_env(env, str_to_sym("-"), cloj(RFN(sub), env));
-	set_env(env, str_to_sym("*"), cloj(RFN(mul), env));
-	set_env(env, str_to_sym("/"), cloj(RFN(div), env));
+	set_env(str_to_sym("+"), cloj(RFN(add), env), env);
+	set_env(str_to_sym("-"), cloj(RFN(sub), env), env);
+	set_env(str_to_sym("*"), cloj(RFN(mul), env), env);
+	set_env(str_to_sym("/"), cloj(RFN(div), env), env);
 
 	return env;
 }
 
-value_t	set_env		(value_t env, value_t key, value_t val)
+value_t	set_env		(value_t key, value_t val, value_t env)
 {
 	assert(rtypeof(env) == CONS_T);
 	assert(rtypeof(key) == SYM_T);
 
-	value_t r = find_env(env, key);
+	value_t r = find_env(key, env);
 	if(nilp(r))
 	{
-		r = cons(key, val);
-		rplaca(env, nconc(car(env), list(1, r)));
+		rplaca(env, acons(key, val, car(env)));
 	}
 	else
 	{
@@ -62,7 +61,7 @@ value_t	set_env		(value_t env, value_t key, value_t val)
 	return r;
 }
 
-value_t	find_env	(value_t env, value_t key)
+value_t	find_env	(value_t key, value_t env)
 {
 	assert(rtypeof(env) == CONS_T);
 	assert(rtypeof(key) == SYM_T);
@@ -73,10 +72,10 @@ value_t	find_env	(value_t env, value_t key)
 	}
 	else
 	{
-		value_t s = search_alist(car(env), key);
+		value_t s = assoc(key, car(env));
 		if(nilp(s))
 		{
-			return find_env(cdr(env), key);
+			return find_env(key, cdr(env));
 		}
 		else
 		{
@@ -85,7 +84,7 @@ value_t	find_env	(value_t env, value_t key)
 	}
 }
 
-value_t	get_env_value	(value_t env, value_t key)
+value_t	get_env_value	(value_t key, value_t env)
 {
 	assert(rtypeof(env) == CONS_T);
 	assert(rtypeof(key) == SYM_T);
@@ -96,10 +95,10 @@ value_t	get_env_value	(value_t env, value_t key)
 	}
 	else
 	{
-		value_t s = search_alist(car(env), key);
+		value_t s = assoc(key, car(env));
 		if(nilp(s))
 		{
-			return get_env_value(cdr(env), key);
+			return get_env_value(key, cdr(env));
 		}
 		else
 		{
