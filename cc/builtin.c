@@ -81,6 +81,11 @@ bool nilp(value_t x)
 	return x.type.main == CONS_T && x.type.sub == 0 && x.type.val == 0;
 }
 
+bool intp(value_t x)
+{
+	return x.type.main == OTH_T && x.type.sub == INT_T;
+}
+
 value_t rplaca(value_t x, value_t v)
 {
 	if(rtypeof(x) == CONS_T || rtypeof(x) == STR_T)
@@ -124,7 +129,7 @@ value_t last(value_t x)
 			value_t i;
 			for(i.cons = aligned_addr(x); !nilp(cdr(i)); i = cdr(i))
 				;
-	
+
 			return i;
 		}
 	}

@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "builtin.h"
 #include "env.h"
+#include "util.h"
 
 
 /////////////////////////////////////////////////////////////////////
@@ -11,27 +12,19 @@ static value_t add(value_t a, value_t b)
 	return RINT(a.rint.val + b.rint.val);
 }
 
-static value_t search_alist(value_t list, value_t key)
+static value_t sub(value_t a, value_t b)
 {
-	assert(rtypeof(list) == CONS_T);
+	return RINT(a.rint.val - b.rint.val);
+}
 
-	if(nilp(list))
-	{
-		return NIL;
-	}
-	else
-	{
-		for(value_t v = list; !nilp(v); v = cdr(v))
-		{
-			value_t vcar = car(v);
-			assert(rtypeof(vcar) == CONS_T);
+static value_t mul(value_t a, value_t b)
+{
+	return RINT(a.rint.val * b.rint.val);
+}
 
-			if(equal(car(vcar), key))
-				return vcar;
-		}
-
-		return NIL;
-	}
+static value_t div(value_t a, value_t b)
+{
+	return RINT(a.rint.val / b.rint.val);
 }
 
 
@@ -42,10 +35,10 @@ static value_t search_alist(value_t list, value_t key)
 value_t	init_env	(void)
 {
 	value_t env = cons(NIL, NIL);
-	set_env(env, str_to_sym("+"), cloj(RFN(add), NIL));
-	set_env(env, str_to_sym("-"), str_to_sym("sub"));
-	set_env(env, str_to_sym("*"), str_to_sym("mul"));
-	set_env(env, str_to_sym("/"), str_to_sym("div"));
+	set_env(env, str_to_sym("+"), cloj(RFN(add), env));
+	set_env(env, str_to_sym("-"), cloj(RFN(sub), env));
+	set_env(env, str_to_sym("*"), cloj(RFN(mul), env));
+	set_env(env, str_to_sym("/"), cloj(RFN(div), env));
 
 	return env;
 }
@@ -65,7 +58,7 @@ value_t	set_env		(value_t env, value_t key, value_t val)
 	{
 		rplacd(r, val);
 	}
-	
+
 	return r;
 }
 

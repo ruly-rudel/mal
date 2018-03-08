@@ -81,6 +81,7 @@ value_t cdr	(value_t x);
 value_t	cons	(value_t car, value_t cdr);
 bool    errp	(value_t x);
 bool    nilp	(value_t x);
+bool    intp	(value_t x);
 value_t rplaca	(value_t x, value_t v);
 value_t rplacd	(value_t x, value_t v);
 value_t last	(value_t x);

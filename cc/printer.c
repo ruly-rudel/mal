@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "builtin.h"
 #include "printer.h"
+#include "util.h"
 
 #define MAL
 
@@ -27,6 +28,10 @@ static value_t pr_str_int(int64_t x)
 	if(x < 0)
 	{
 		r = cons(RCHAR('-'), pr_str_int_rec(-x, NIL));
+	}
+	else if(x == 0)
+	{
+		r = str_to_rstr("0");
 	}
 	else
 	{
@@ -67,7 +72,38 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 
 			if(rtypeof(x) == CONS_T)
 			{
-				nconc(r, pr_str(car(x), cyclic));
+				// check cyclic
+				if(!nilp(cyclic))
+				{
+					value_t ex = search_alist(cdr(cyclic), x);
+					if(nilp(ex))
+					{
+						nconc(cyclic, cons(cons(x, NIL), NIL));
+						// append string
+						nconc(r, pr_str(car(x), cyclic));
+					}
+					else
+					{
+						value_t n = cdr(ex);
+						if(nilp(n))
+						{
+							n = car(cyclic);
+							assert(intp(n));
+							rplacd(ex, n);
+							rplaca(cyclic, RINT(n.rint.val + 1));
+						}
+
+						nconc(r, str_to_rstr("#"));
+						nconc(r, pr_str_int(n.rint.val));
+						nconc(r, str_to_rstr("#"));
+					}
+				}
+				else	// does not chech cyclic
+				{
+					// append string
+					nconc(r, pr_str(car(x), cyclic));
+				}
+
 				x = cdr(x);
 			}
 			else	// dotted
