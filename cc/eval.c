@@ -6,7 +6,7 @@
 /////////////////////////////////////////////////////////////////////
 // public: eval
 
-value_t eval_ast	(value_t ast)
+value_t eval_ast	(value_t ast, value_t env)
 {
 	switch(rtypeof(ast))
 	{

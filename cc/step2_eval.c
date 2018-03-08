@@ -20,10 +20,9 @@ value_t read(FILE* fp)
 	}
 }
 
-value_t eval(value_t v)
+value_t eval(value_t v, value_t env)
 {
-	return init_env();
-	//return v;
+	return eval_ast(v, env);
 }
 
 void print(value_t s, FILE* fp)
@@ -35,6 +34,7 @@ void print(value_t s, FILE* fp)
 int main(int argc, char* argv[])
 {
 	value_t r, e;
+	value_t env = init_env();
 
 	for(;;)
 	{
@@ -46,11 +46,11 @@ int main(int argc, char* argv[])
 			{
 				fprintf(stdout, "\n");
 				break;
-			} 
+			}
 		}
 		else
 		{
-			e = eval(r);
+			e = eval(r, env);
 			print(e, stdout);
 		}
 	}
