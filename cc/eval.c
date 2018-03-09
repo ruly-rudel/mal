@@ -3,13 +3,35 @@
 #include "eval.h"
 #include "env.h"
 
+value_t eval(value_t v, value_t env);
+
 /////////////////////////////////////////////////////////////////////
 // private: eval functions
 
-value_t eval_sym(value_t sym, value_t env)
+value_t eval_list(value_t list, value_t env)
 {
-	assert(rtypeof(sym) == SYM_T);
-	return get_env_value(sym, env);
+	assert(rtypeof(list) == CONS_T);
+
+	if(nilp(list))
+	{
+		return NIL;
+	}
+	else
+	{
+		value_t lcar = eval(car(list), env);
+		if(errp(lcar))
+		{
+			return lcar;
+		}
+
+		value_t lcdr = eval_list(cdr(list), env);
+		if(errp(lcdr))
+		{
+			return lcdr;
+		}
+
+		return cons(lcar, lcdr);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -20,10 +42,10 @@ value_t eval_ast	(value_t ast, value_t env)
 	switch(rtypeof(ast))
 	{
 	    case SYM_T:
-		return eval_sym(ast, env);
+		return get_env_value(ast, env);
 
 	    case CONS_T:
-		return ast;
+		return eval_list(ast, env);
 
 	    default:
 		return ast;

@@ -1,6 +1,7 @@
 
 #define DEF_EXTERN
 #include <stdio.h>
+#include <assert.h>
 #include "builtin.h"
 #include "reader.h"
 #include "printer.h"
@@ -22,7 +23,43 @@ value_t read(FILE* fp)
 
 value_t eval(value_t v, value_t env)
 {
-	return eval_ast(v, env);
+	if(errp(v))
+	{
+		return v;
+	}
+	else if(rtypeof(v) == CONS_T)
+	{
+		if(nilp(v))
+		{
+			return NIL;
+		}
+		else
+		{
+			value_t ev = eval_ast(v, env);
+			if(errp(ev))
+			{
+				return ev;
+			}
+			else
+			{
+				value_t fn = car(ev);
+				if(rtypeof(fn) == FN_T)
+				{
+					fn.type.main = CONS_T;
+					// apply
+					return car(fn).rfn(cdr(ev));
+				}
+				else
+				{
+					return RERR(ERR_NOTFN);
+				}
+			}
+		}
+	}
+	else
+	{
+		return eval_ast(v, env);
+	}
 }
 
 void print(value_t s, FILE* fp)
@@ -51,7 +88,10 @@ int main(int argc, char* argv[])
 		else
 		{
 			e = eval(r, env);
-			print(e, stdout);
+			if(!errp(e))
+			{
+				print(e, stdout);
+			}
 		}
 	}
 

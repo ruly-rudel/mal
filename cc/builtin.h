@@ -43,16 +43,21 @@ typedef struct
 	float		val;
 } rfloat_t;
 
+union _value_t;
+typedef union _value_t (*rfn_t)(union _value_t);
+
 struct _cons_t;
-typedef union
+typedef union _value_t
 {
 	type_t		type;
 	rint_t		rint;
 	rfloat_t	rfloat;
 	struct _cons_t*	cons;
 	uint64_t	raw;
+	rfn_t		rfn;
 	void*		ptr;
 } value_t;
+
 
 typedef struct _cons_t
 {
@@ -67,12 +72,14 @@ typedef struct _cons_t
 #define RCHAR(X)  ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
 #define RINT(X)   ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
 #define RFLOAT(X) ((value_t){ .rfloat.type = FLOAT_T << 3 | OTH_T, .rfloat.val = (X) })
-#define RFN(X)    ((value_t){ .ptr = (X) })
+#define RFN(X)    ((value_t){ .rfn = (X) })
 
 #define ERR_TYPE	1
 #define ERR_EOF		2
 #define ERR_PARSE	3
 #define ERR_NOTFOUND	4
+#define ERR_ARG		5
+#define ERR_NOTFN	6
 
 rtype_t rtypeof	(value_t v);
 

@@ -7,24 +7,88 @@
 /////////////////////////////////////////////////////////////////////
 // private: support functions searching environment with symbol-string
 
-static value_t add(value_t a, value_t b)
+value_t add(value_t body)
 {
-	return RINT(a.rint.val + b.rint.val);
+	assert(rtypeof(body) == CONS_T);
+
+	value_t sum = RINT(0);
+	if(!nilp(body))
+	{
+		for(value_t cur = body; !nilp(cur); cur = cdr(cur))
+		{
+			value_t cura = car(cur);
+			sum = RINT(sum.rint.val + cura.rint.val);
+		}
+
+	}
+	return sum;
 }
 
-static value_t sub(value_t a, value_t b)
+value_t sub(value_t body)
 {
-	return RINT(a.rint.val - b.rint.val);
+	assert(rtypeof(body) == CONS_T);
+	if(nilp(body))
+	{
+		return RERR(ERR_ARG);
+	}
+	else
+	{
+		value_t sum = car(body);
+		assert(rtypeof(sum) == INT_T);
+		body = cdr(body);
+		if(!nilp(body))
+		{
+			for(value_t cur = body; !nilp(cur); cur = cdr(cur))
+			{
+				value_t cura = car(cur);
+				sum = RINT(sum.rint.val - cura.rint.val);
+			}
+		}
+
+		return sum;
+	}
 }
 
-static value_t mul(value_t a, value_t b)
+value_t mul(value_t body)
 {
-	return RINT(a.rint.val * b.rint.val);
+	assert(rtypeof(body) == CONS_T);
+
+	value_t sum = RINT(1);
+	if(!nilp(body))
+	{
+		for(value_t cur = body; !nilp(cur); cur = cdr(cur))
+		{
+			value_t cura = car(cur);
+			sum = RINT(sum.rint.val * cura.rint.val);
+		}
+
+	}
+	return sum;
 }
 
-static value_t div(value_t a, value_t b)
+value_t div(value_t body)
 {
-	return RINT(a.rint.val / b.rint.val);
+	assert(rtypeof(body) == CONS_T);
+	if(nilp(body))
+	{
+		return RERR(ERR_ARG);
+	}
+	else
+	{
+		value_t sum = car(body);
+		assert(rtypeof(sum) == INT_T);
+		body = cdr(body);
+		if(!nilp(body))
+		{
+			for(value_t cur = body; !nilp(cur); cur = cdr(cur))
+			{
+				value_t cura = car(cur);
+				sum = RINT(sum.rint.val / cura.rint.val);
+			}
+		}
+
+		return sum;
+	}
 }
 
 
