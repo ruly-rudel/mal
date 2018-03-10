@@ -59,9 +59,48 @@ value_t eval_list(value_t v, value_t env)
 		}
 		return val;
 	}
-//	else if(equal(vcar, str_to_sym("let*")))	// let*
-//	{
-//	}
+	else if(equal(vcar, str_to_sym("let*")))	// let*
+	{
+		if(rtypeof(vcdr) != CONS_T)
+		{
+			return RERR(ERR_ARG);
+		}
+
+		// allocate new environment
+		value_t let_env = cons(NIL, env);
+
+		// local symbols
+		value_t def = car(vcdr);
+		if(rtypeof(def) != CONS_T)
+		{
+			return RERR(ERR_ARG);
+		}
+
+		while(!nilp(def))
+		{
+			// symbol
+			value_t sym = car(def);
+			def = cdr(def);
+			if(rtypeof(sym) != SYM_T)
+			{
+				return RERR(ERR_ARG);
+			}
+
+			// body
+			value_t body = eval(car(def), let_env);
+			def = cdr(def);
+			if(errp(body))
+			{
+				return body;
+			}
+			else
+			{
+				set_env(sym, body, let_env);
+			}
+		}
+
+		return eval(car(cdr(vcdr)), let_env);
+	}
 	else						// apply function
 	{
 
@@ -133,6 +172,10 @@ int main(int argc, char* argv[])
 			{
 				fprintf(stdout, "\n");
 				break;
+			}
+			else
+			{
+				print(r, stderr);
 			}
 		}
 		else

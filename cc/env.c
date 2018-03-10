@@ -107,6 +107,7 @@ value_t	init_env	(void)
 	return env;
 }
 
+// search only current environment, set only on current environment
 value_t	set_env		(value_t key, value_t val, value_t env)
 {
 	assert(rtypeof(env) == CONS_T);
@@ -115,7 +116,7 @@ value_t	set_env		(value_t key, value_t val, value_t env)
 	value_t r = find_env(key, env);
 	if(nilp(r))
 	{
-		rplaca(env, acons(key, val, car(env)));
+		r = rplaca(env, acons(key, val, car(env)));
 	}
 	else
 	{
@@ -125,6 +126,7 @@ value_t	set_env		(value_t key, value_t val, value_t env)
 	return r;
 }
 
+// search only current environment
 value_t	find_env	(value_t key, value_t env)
 {
 	assert(rtypeof(env) == CONS_T);
@@ -136,18 +138,11 @@ value_t	find_env	(value_t key, value_t env)
 	}
 	else
 	{
-		value_t s = assoc(key, car(env));
-		if(nilp(s))
-		{
-			return find_env(key, cdr(env));
-		}
-		else
-		{
-			return s;
-		}
+		return assoc(key, car(env));
 	}
 }
 
+// search whole environment
 value_t	get_env_value	(value_t key, value_t env)
 {
 	assert(rtypeof(env) == CONS_T);
