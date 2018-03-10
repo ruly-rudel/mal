@@ -167,6 +167,33 @@ static value_t pr_str_fn(value_t s, value_t cyclic)
 #endif // PRINT_CLOS_ENV
 }
 
+static value_t pr_err(value_t s)
+{
+	assert(rtypeof(s) == ERR_T);
+	switch(s.type.val)
+	{
+	    case ERR_TYPE:
+		return str_to_rstr("type error.");
+
+	    case ERR_PARSE:
+		return str_to_rstr("parse error.");
+
+	    case ERR_NOTFOUND:
+		return str_to_rstr("symbol not found.");
+
+	    case ERR_ARG:
+		return str_to_rstr("argument error.");
+
+	    case ERR_NOTFN:
+		return str_to_rstr("first element of the list is not a function.");
+
+	    case ERR_NOTSYM:
+		return str_to_rstr("not a symbol.");
+
+	    default:
+		return str_to_rstr("unknown error.");
+	}
+}
 
 
 /////////////////////////////////////////////////////////////////////
@@ -204,6 +231,9 @@ value_t pr_str(value_t s, value_t cyclic)
 
 	    case FN_T:
 		return pr_str_fn(s, cyclic);
+
+	    case ERR_T:
+		return pr_err(s);
 
 	    default:
 		return s;

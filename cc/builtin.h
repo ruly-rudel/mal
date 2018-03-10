@@ -80,6 +80,7 @@ typedef struct _cons_t
 #define ERR_NOTFOUND	4
 #define ERR_ARG		5
 #define ERR_NOTFN	6
+#define ERR_NOTSYM	7
 
 rtype_t rtypeof	(value_t v);
 

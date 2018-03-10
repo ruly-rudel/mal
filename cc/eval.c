@@ -8,7 +8,7 @@ value_t eval(value_t v, value_t env);
 /////////////////////////////////////////////////////////////////////
 // private: eval functions
 
-value_t eval_list(value_t list, value_t env)
+static value_t eval_ast_list(value_t list, value_t env)
 {
 	assert(rtypeof(list) == CONS_T);
 
@@ -24,7 +24,7 @@ value_t eval_list(value_t list, value_t env)
 			return lcar;
 		}
 
-		value_t lcdr = eval_list(cdr(list), env);
+		value_t lcdr = eval_ast_list(cdr(list), env);
 		if(errp(lcdr))
 		{
 			return lcdr;
@@ -45,7 +45,7 @@ value_t eval_ast	(value_t ast, value_t env)
 		return get_env_value(ast, env);
 
 	    case CONS_T:
-		return eval_list(ast, env);
+		return eval_ast_list(ast, env);
 
 	    default:
 		return ast;
