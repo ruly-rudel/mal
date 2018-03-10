@@ -151,19 +151,35 @@ static value_t pr_str_str(value_t s)
 	return r;
 }
 
-static value_t pr_str_fn(value_t s, value_t cyclic)
+static value_t pr_str_cfn(value_t s, value_t cyclic)
 {
-	assert(rtypeof(s) == FN_T);
+	assert(rtypeof(s) == CFN_T);
 
 #ifdef PRINT_CLOS_ENV
 	s.type.main = CONS_T;
-	value_t r = str_to_rstr("(#<FUNCTION> . ");
+	value_t r = str_to_rstr("(#<C-FUNCTION> . ");
 	nconc(r, pr_str(cdr(s), cyclic));
 	nconc(r, str_to_rstr(")"));
 
 	return r;
 #else  // PRINT_CLOS_ENV
-	return str_to_rstr("#<FUNCTION>");
+	return str_to_rstr("#<C-FUNCTION>");
+#endif // PRINT_CLOS_ENV
+}
+
+static value_t pr_str_cloj(value_t s, value_t cyclic)
+{
+	assert(rtypeof(s) == CLOJ_T);
+
+#ifdef PRINT_CLOS_ENV
+	s.type.main = CONS_T;
+	value_t r = str_to_rstr("(#<CLOJURE> . ");
+	nconc(r, pr_str(cdr(s), cyclic));
+	nconc(r, str_to_rstr(")"));
+
+	return r;
+#else  // PRINT_CLOS_ENV
+	return str_to_rstr("#<CLOJURE>");
 #endif // PRINT_CLOS_ENV
 }
 
@@ -229,8 +245,11 @@ value_t pr_str(value_t s, value_t cyclic)
 	    case STR_T:
 		return pr_str_str(s);
 
-	    case FN_T:
-		return pr_str_fn(s, cyclic);
+	    case CFN_T:
+		return pr_str_cfn(s, cyclic);
+
+	    case CLOJ_T:
+		return pr_str_cloj(s, cyclic);
 
 	    case ERR_T:
 		return pr_err(s);

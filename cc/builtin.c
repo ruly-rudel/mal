@@ -63,10 +63,18 @@ value_t	cons(value_t car, value_t cdr)
 	return r;
 }
 
+value_t	cfn(value_t car, value_t cdr)
+{
+	value_t	r	= cons(car, cdr);
+	r.type.main	= CFN_T;
+
+	return r;
+}
+
 value_t	cloj(value_t car, value_t cdr)
 {
 	value_t	r	= cons(car, cdr);
-	r.type.main	= FN_T;
+	r.type.main	= CLOJ_T;
 
 	return r;
 }

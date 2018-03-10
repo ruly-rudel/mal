@@ -43,11 +43,11 @@ value_t eval(value_t v, value_t env)
 			else
 			{
 				value_t fn = car(ev);
-				if(rtypeof(fn) == FN_T)
+				if(rtypeof(fn) == CFN_T)
 				{
 					fn.type.main = CONS_T;
 					// apply
-					return car(fn).rfn(cdr(ev));
+					return car(fn).rfn(cdr(ev), env);
 				}
 				else
 				{

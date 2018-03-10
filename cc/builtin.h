@@ -12,10 +12,10 @@ typedef enum _rtype_t {
 	CONS_T = 0,
 	SYM_T,
 	STR_T,
-	FN_T,
+	CFN_T,
+	CLOJ_T,
 	MACRO_T,
 	VEC_T,
-	HASH_T,
 	OTH_T,
 
 	// sub types (content is value)
@@ -44,7 +44,7 @@ typedef struct
 } rfloat_t;
 
 union _value_t;
-typedef union _value_t (*rfn_t)(union _value_t);
+typedef union _value_t (*rfn_t)(union _value_t, union _value_t);
 
 struct _cons_t;
 typedef union _value_t
@@ -97,6 +97,7 @@ value_t nconc		(value_t a, value_t b);
 bool	eq		(value_t x, value_t y);
 bool	equal		(value_t x, value_t y);
 value_t list		(int n, ...);
+value_t	cfn		(value_t fn, value_t env);
 value_t	cloj		(value_t fn, value_t env);
 value_t copy_list	(value_t list);
 value_t assoc		(value_t key, value_t list);

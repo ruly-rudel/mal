@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////
 // private: support functions searching environment with symbol-string
 
-value_t add(value_t body)
+static value_t add(value_t body, value_t env)
 {
 	assert(rtypeof(body) == CONS_T);
 
@@ -24,7 +24,7 @@ value_t add(value_t body)
 	return sum;
 }
 
-value_t sub(value_t body)
+static value_t sub(value_t body, value_t env)
 {
 	assert(rtypeof(body) == CONS_T);
 	if(nilp(body))
@@ -49,7 +49,7 @@ value_t sub(value_t body)
 	}
 }
 
-value_t mul(value_t body)
+static value_t mul(value_t body, value_t env)
 {
 	assert(rtypeof(body) == CONS_T);
 
@@ -66,7 +66,7 @@ value_t mul(value_t body)
 	return sum;
 }
 
-value_t div(value_t body)
+static value_t div(value_t body, value_t env)
 {
 	assert(rtypeof(body) == CONS_T);
 	if(nilp(body))
@@ -99,10 +99,10 @@ value_t div(value_t body)
 value_t	init_env	(void)
 {
 	value_t env = cons(NIL, NIL);
-	set_env(str_to_sym("+"), cloj(RFN(add), env), env);
-	set_env(str_to_sym("-"), cloj(RFN(sub), env), env);
-	set_env(str_to_sym("*"), cloj(RFN(mul), env), env);
-	set_env(str_to_sym("/"), cloj(RFN(div), env), env);
+	set_env(str_to_sym("+"), cfn(RFN(add), env), env);
+	set_env(str_to_sym("-"), cfn(RFN(sub), env), env);
+	set_env(str_to_sym("*"), cfn(RFN(mul), env), env);
+	set_env(str_to_sym("/"), cfn(RFN(div), env), env);
 
 	return env;
 }

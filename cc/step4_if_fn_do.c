@@ -91,6 +91,49 @@ value_t eval_let(value_t vcdr, value_t env)
 	return eval(car(cdr(vcdr)), let_env);
 }
 
+value_t eval_fn(value_t vcdr, value_t env)
+{
+	if(rtypeof(vcdr) != CONS_T)
+	{
+		return RERR(ERR_ARG);
+	}
+
+	// allocate new environment
+	value_t let_env = cons(NIL, env);
+
+	// local symbols
+	value_t def = car(vcdr);
+	if(rtypeof(def) != CONS_T)
+	{
+		return RERR(ERR_ARG);
+	}
+
+	while(!nilp(def))
+	{
+		// symbol
+		value_t sym = car(def);
+		def = cdr(def);
+		if(rtypeof(sym) != SYM_T)
+		{
+			return RERR(ERR_ARG);
+		}
+
+		// body
+		value_t body = eval(car(def), let_env);
+		def = cdr(def);
+		if(errp(body))
+		{
+			return body;
+		}
+		else
+		{
+			set_env(sym, body, let_env);
+		}
+	}
+
+	return eval(car(cdr(vcdr)), let_env);
+}
+
 value_t eval_list(value_t v, value_t env)
 {
 	assert(rtypeof(v) == CONS_T);
@@ -110,6 +153,10 @@ value_t eval_list(value_t v, value_t env)
 	else if(equal(vcar, str_to_sym("let*")))	// let*
 	{
 		return eval_let(vcdr, env);
+	}
+	else if(equal(vcar, str_to_sym("fn*")))		// fn*
+	{
+		return eval_fn(vcdr, env);
 	}
 	else						// apply function
 	{
