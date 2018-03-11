@@ -5,5 +5,8 @@
 #include "builtin.h"
 
 value_t eval_ast	(value_t ast, value_t env);
+value_t eval_ast_list	(value_t list, value_t env);
+value_t eval_def	(value_t vcdr, value_t env);
+value_t eval_let	(value_t vcdr, value_t env);
 
 #endif // _eval_h_

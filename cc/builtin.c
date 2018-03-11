@@ -261,6 +261,30 @@ value_t acons(value_t key, value_t val, value_t list)
 	return cons(cons(key, val), list);
 }
 
+value_t pairlis1(value_t key, value_t val, value_t alist)
+{
+	assert(rtypeof(key)   == CONS_T);
+	assert(rtypeof(val)   == CONS_T);
+	assert(rtypeof(alist) == CONS_T);
+
+	if(nilp(key))
+	{
+		return alist;
+	}
+	else
+	{
+		return pairlis1(cdr(key), cdr(val), acons(car(key), car(val), alist));
+	}
+}
+
+value_t pairlis		(value_t key, value_t val)
+{
+	assert(rtypeof(key) == CONS_T);
+	assert(rtypeof(val) == CONS_T);
+
+	return pairlis1(key, val, NIL);
+}
+
 /////////////////////////////////////////////////////////////////////
 // public: bridge functions from C to LISP
 

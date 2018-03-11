@@ -71,7 +71,7 @@ void print(value_t s, FILE* fp)
 int main(int argc, char* argv[])
 {
 	value_t r, e;
-	value_t env = init_env();
+	value_t env = create_root_env();
 
 	for(;;)
 	{

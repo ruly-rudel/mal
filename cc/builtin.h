@@ -102,6 +102,7 @@ value_t	cloj		(value_t fn, value_t env);
 value_t copy_list	(value_t list);
 value_t assoc		(value_t key, value_t list);
 value_t acons		(value_t key, value_t val, value_t list);
+value_t pairlis		(value_t key, value_t val);
 
 value_t str_to_cons	(const char* s);
 value_t str_to_rstr	(const char* s);

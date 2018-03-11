@@ -96,15 +96,39 @@ static value_t div(value_t body, value_t env)
 /////////////////////////////////////////////////////////////////////
 // public: Environment create, search and modify functions
 
-value_t	init_env	(void)
+value_t	create_root_env	(void)
 {
+	value_t key = list(4, str_to_sym("+"),
+	                      str_to_sym("-"),
+	                      str_to_sym("*"),
+	                      str_to_sym("/"));
+
+	value_t val = list(4, cfn(RFN(add), NIL),
+	                      cfn(RFN(sub), NIL),
+	                      cfn(RFN(mul), NIL),
+	                      cfn(RFN(div), NIL));
+
+	return create_env(key, val, NIL);
+	/*
 	value_t env = cons(NIL, NIL);
+
 	set_env(str_to_sym("+"), cfn(RFN(add), env), env);
 	set_env(str_to_sym("-"), cfn(RFN(sub), env), env);
 	set_env(str_to_sym("*"), cfn(RFN(mul), env), env);
 	set_env(str_to_sym("/"), cfn(RFN(div), env), env);
 
 	return env;
+	*/
+
+}
+
+value_t	create_env	(value_t key, value_t val, value_t outer)
+{
+	assert(rtypeof(outer) == CONS_T);
+	assert(rtypeof(key)   == CONS_T);
+	assert(rtypeof(val)   == CONS_T);
+
+	return cons(pairlis(key, val), outer);
 }
 
 // search only current environment, set only on current environment

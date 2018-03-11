@@ -23,74 +23,6 @@ value_t read(FILE* fp)
 
 value_t eval(value_t v, value_t env);
 
-value_t eval_def(value_t vcdr, value_t env)
-{
-	// key
-	value_t key = car(vcdr);
-	if(rtypeof(key) != SYM_T)
-	{
-		return RERR(ERR_NOTSYM);
-	}
-
-	// value
-	value_t val_notev = cdr(vcdr);
-	if(rtypeof(val_notev) != CONS_T)
-	{
-		return RERR(ERR_ARG);
-	}
-
-	value_t val = eval(car(val_notev), env);
-
-	if(!errp(val))
-	{
-		set_env(key, val, env);
-	}
-	return val;
-}
-
-value_t eval_let(value_t vcdr, value_t env)
-{
-	if(rtypeof(vcdr) != CONS_T)
-	{
-		return RERR(ERR_ARG);
-	}
-
-	// allocate new environment
-	value_t let_env = cons(NIL, env);
-
-	// local symbols
-	value_t def = car(vcdr);
-	if(rtypeof(def) != CONS_T)
-	{
-		return RERR(ERR_ARG);
-	}
-
-	while(!nilp(def))
-	{
-		// symbol
-		value_t sym = car(def);
-		def = cdr(def);
-		if(rtypeof(sym) != SYM_T)
-		{
-			return RERR(ERR_ARG);
-		}
-
-		// body
-		value_t body = eval(car(def), let_env);
-		def = cdr(def);
-		if(errp(body))
-		{
-			return body;
-		}
-		else
-		{
-			set_env(sym, body, let_env);
-		}
-	}
-
-	return eval(car(cdr(vcdr)), let_env);
-}
-
 value_t eval_list(value_t v, value_t env)
 {
 	assert(rtypeof(v) == CONS_T);
@@ -99,11 +31,7 @@ value_t eval_list(value_t v, value_t env)
 	value_t vcar = car(v);
 	value_t vcdr = cdr(v);
 
-	if(rtypeof(vcar) != SYM_T)
-	{
-		return RERR(ERR_NOTFN);
-	}
-	else if(equal(vcar, str_to_sym("def!")))	// def!
+	if(equal(vcar, str_to_sym("def!")))		// def!
 	{
 		return eval_def(vcdr, env);
 	}
@@ -167,7 +95,7 @@ void print(value_t s, FILE* fp)
 int main(int argc, char* argv[])
 {
 	value_t r, e;
-	value_t env = init_env();
+	value_t env = create_root_env();
 
 	for(;;)
 	{
