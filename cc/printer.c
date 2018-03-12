@@ -128,8 +128,18 @@ static value_t pr_str_str(value_t s, bool print_readably)
 	assert(rtypeof(s) == STR_T);
 	s.type.main = CONS_T;
 
-	value_t r = cons(RCHAR('"'), NIL);
-	value_t *cur = &r.cons->cdr;
+	value_t r;
+	value_t *cur;
+	if(print_readably)
+	{
+		r = cons(RCHAR('"'), NIL);
+		cur = &r.cons->cdr;
+	}
+	else
+	{
+		r = NIL;
+		cur = &r;
+	}
 
 	while(!nilp(s))
 	{
@@ -167,7 +177,10 @@ static value_t pr_str_str(value_t s, bool print_readably)
 		assert(rtypeof(s) == CONS_T);
 	}
 
-	*cur = cons(RCHAR('"'), NIL);
+	if(print_readably)
+	{
+		*cur = cons(RCHAR('"'), NIL);
+	}
 
 	r.type.main = STR_T;
 	return r;
@@ -217,16 +230,16 @@ static value_t pr_err(value_t s)
 		return str_to_rstr("parse error.");
 
 	    case ERR_NOTFOUND:
-		return str_to_rstr("symbol not found.");
+		return str_to_rstr("symbol or variable is not found.");
 
 	    case ERR_ARG:
-		return str_to_rstr("argument error.");
+		return str_to_rstr("too few argument.");
 
 	    case ERR_NOTFN:
 		return str_to_rstr("first element of the list is not a function.");
 
 	    case ERR_NOTSYM:
-		return str_to_rstr("not a symbol.");
+		return str_to_rstr("symbol.");
 
 	    default:
 		return str_to_rstr("unknown error.");

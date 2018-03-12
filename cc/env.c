@@ -124,7 +124,7 @@ static value_t b_pr_str1(value_t body, value_t cyclic, bool print_readably, bool
 {
 	if(nilp(body))
 	{
-		return NIL;
+		return str_to_rstr(print_readably ? "\"\"" : "");
 	}
 	else
 	{
@@ -138,26 +138,22 @@ static value_t b_pr_str1(value_t body, value_t cyclic, bool print_readably, bool
 static value_t b_pr_str(value_t body, value_t env)
 {
 	return b_pr_str1(body, cons(RINT(0), NIL), true, true);
-	//return pr_str(car(body), cons(RINT(0), NIL), true);
 }
 
 static value_t str(value_t body, value_t env)
 {
 	return b_pr_str1(body, cons(RINT(0), NIL), false, false);
-	//return pr_str(car(body), cons(RINT(0), NIL), false);
 }
 
 static value_t prn(value_t body, value_t env)
 {
 	printline(b_pr_str1(body, cons(RINT(0), NIL), true, true), stdout);
-	//printline(pr_str(car(body), cons(RINT(0), NIL), true), stdout);
 	return NIL;
 }
 
 static value_t println(value_t body, value_t env)
 {
 	printline(b_pr_str1(body, cons(RINT(0), NIL), false, true), stdout);
-	//printline(pr_str(car(body), cons(RINT(0), NIL), false), stdout);
 	return NIL;
 }
 

@@ -147,6 +147,9 @@ int main(int argc, char* argv[])
 	value_t r, e;
 	value_t env = create_root_env();
 
+	// implement not
+	eval(read_str(str_to_rstr("(def! not (fn* (a) (if a false true)))")), env);
+
 	for(;;)
 	{
 		fprintf(stdout, "mal-user> ");
