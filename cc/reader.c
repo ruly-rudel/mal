@@ -106,9 +106,13 @@ static value_t read_list(scan_t* st)
 			assert(rtypeof(c) == INT_T);
 			if(c.rint.val == ')')
 			{
-				if(nilp(r))	// () is nill
+				if(nilp(r))
 				{
-					r = NIL;
+#ifdef MAL
+					r = cons(NIL, NIL);	// () is (nil . nil)
+#else  // MAL
+					r = NIL;		// () is nil
+#endif // MAL
 				}
 				scan_next(st);
 				return r;
@@ -181,7 +185,7 @@ value_t readline(FILE* fp)
 	for(;;)
 	{
 		int c = fgetc(fp);
-		if(c == EOF && nilp(r))	// 
+		if(c == EOF && nilp(r))	// EOF
 		{
 			return RERR(ERR_EOF);
 		}

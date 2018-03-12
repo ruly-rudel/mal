@@ -33,6 +33,12 @@ value_t eval(value_t v, value_t env)
 		{
 			return NIL;
 		}
+#ifdef MAL
+		else if(nilp(car(v)) && nilp(cdr(v)))	// empty list
+		{
+			return v;
+		}
+#endif // MAL
 		else
 		{
 			value_t ev = eval_ast(v, env);

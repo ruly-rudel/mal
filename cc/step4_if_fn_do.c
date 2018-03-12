@@ -39,6 +39,14 @@ value_t eval_list(value_t v, value_t env)
 	{
 		return eval_let(vcdr, env);
 	}
+	else if(equal(vcar, str_to_sym("do")))		// do
+	{
+		return eval_do(vcdr, env);
+	}
+	else if(equal(vcar, str_to_sym("if")))		// if
+	{
+		return eval_if(vcdr, env);
+	}
 	else if(equal(vcar, str_to_sym("fn*")))		// fn*
 	{
 		return cloj(vcdr, env);
@@ -110,6 +118,12 @@ value_t eval(value_t v, value_t env)
 		{
 			return NIL;
 		}
+#ifdef MAL
+		else if(nilp(car(v)) && nilp(cdr(v)))	// empty list
+		{
+			return v;
+		}
+#endif // MAL
 		else
 		{
 			return eval_list(v, env);

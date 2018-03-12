@@ -78,6 +78,25 @@ value_t eval_def(value_t vcdr, value_t env)
 	return val;
 }
 
+value_t eval_do(value_t vcdr, value_t env)
+{
+	return car(last(eval_ast_list(vcdr, env)));
+}
+
+value_t eval_if(value_t vcdr, value_t env)
+{
+	value_t cond = eval(car(vcdr), env);
+
+	if(nilp(cond) || equal(cond, str_to_sym("false")))	// false
+	{
+		return eval(car(cdr(cdr(vcdr))), env);
+	}
+	else		// true
+	{
+		return eval(car(cdr(vcdr)), env);
+	}
+}
+
 value_t eval_let(value_t vcdr, value_t env)
 {
 	if(rtypeof(vcdr) != CONS_T)

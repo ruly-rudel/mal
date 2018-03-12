@@ -205,8 +205,18 @@ bool equal(value_t x, value_t y)
 	{
 		x.type.main = CONS_T;
 		y.type.main = CONS_T;
-
-		return equal(car(x), car(y)) && equal(cdr(x), cdr(y));
+		if(nilp(x))
+		{
+			return nilp(y);
+		}
+		else if(nilp(y))
+		{
+			return nilp(x);
+		}
+		else
+		{
+			return equal(car(x), car(y)) && equal(cdr(x), cdr(y));
+		}
 	}
 	else
 	{

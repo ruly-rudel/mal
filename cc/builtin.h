@@ -7,6 +7,9 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
+// use mal mode
+#define MAL
+
 typedef enum _rtype_t {
 	// main 8types (content is address)
 	CONS_T = 0,
@@ -73,6 +76,14 @@ typedef struct _cons_t
 #define RINT(X)   ((value_t){ .rint.type   = INT_T   << 3 | OTH_T, .rint.val   = (X) })
 #define RFLOAT(X) ((value_t){ .rfloat.type = FLOAT_T << 3 | OTH_T, .rfloat.val = (X) })
 #define RFN(X)    ((value_t){ .rfn = (X) })
+
+#ifdef MAL
+	#define SYM_TRUE  str_to_sym("true")
+	#define SYM_FALSE str_to_sym("false")
+#else  // MAL
+	#define SYM_TRUE  str_to_sym("t")
+	#define SYM_FALSE NIL
+#endif // MAL
 
 #define ERR_TYPE	1
 #define ERR_EOF		2

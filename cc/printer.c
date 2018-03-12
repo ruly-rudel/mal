@@ -3,8 +3,6 @@
 #include "printer.h"
 #include "util.h"
 
-#define MAL
-
 /////////////////////////////////////////////////////////////////////
 // private: printer support functions
 
@@ -50,13 +48,14 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 
 	if(nilp(x))
 	{
-#ifdef MAL
-		r = str_to_rstr("()");
-#else // MAL
 		r = str_to_rstr("nil");
-#endif // MAL
-
 	}
+#ifdef MAL
+	else if(nilp(car(x)) && nilp(cdr(x)))
+	{
+		r = str_to_rstr("()");
+	}
+#endif // MAL
 	else
 	{
 		do
