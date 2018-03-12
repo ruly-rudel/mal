@@ -43,8 +43,10 @@ static value_t pr_str_int(int64_t x)
 
 static value_t pr_str_cons(value_t x, value_t cyclic)
 {
-	assert(rtypeof(x) == CONS_T);
+	assert(rtypeof(x) == CONS_T || rtypeof(x) == VEC_T);
 	value_t r    = NIL;
+	bool is_vec = rtypeof(x) == VEC_T;
+	x.type.main = CONS_T;
 
 	if(nilp(x))
 	{
@@ -53,7 +55,7 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 #ifdef MAL
 	else if(nilp(car(x)) && nilp(cdr(x)))
 	{
-		r = str_to_rstr("()");
+		r = str_to_rstr(is_vec ? "[]" : "()");
 	}
 #endif // MAL
 	else
@@ -62,7 +64,7 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 		{
 			if(nilp(r))
 			{
-				r = str_to_rstr("(");
+				r = str_to_rstr(is_vec ? "[" : "(");
 			}
 			else
 			{
@@ -79,7 +81,7 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 					{
 						nconc(cyclic, cons(cons(x, NIL), NIL));
 						// append string
-						nconc(r, pr_str(car(x), cyclic));
+						nconc(r, pr_str(car(x), cyclic, true));
 					}
 					else
 					{
@@ -100,7 +102,7 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 				else	// does not chech cyclic
 				{
 					// append string
-					nconc(r, pr_str(car(x), cyclic));
+					nconc(r, pr_str(car(x), cyclic, true));
 				}
 
 				x = cdr(x);
@@ -108,12 +110,12 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 			else	// dotted
 			{
 				nconc(r, str_to_rstr(". "));
-				nconc(r, pr_str(x, cyclic));
+				nconc(r, pr_str(x, cyclic, true));
 				x = NIL;
 			}
 		} while(!nilp(x));
 
-		nconc(r, str_to_rstr(")"));
+		nconc(r, str_to_rstr(is_vec ? "]" : ")"));
 	}
 
 	r.type.main = STR_T;
@@ -121,7 +123,7 @@ static value_t pr_str_cons(value_t x, value_t cyclic)
 	return r;
 }
 
-static value_t pr_str_str(value_t s)
+static value_t pr_str_str(value_t s, bool print_readably)
 {
 	assert(rtypeof(s) == STR_T);
 	s.type.main = CONS_T;
@@ -134,11 +136,32 @@ static value_t pr_str_str(value_t s)
 		value_t tcar = car(s);
 		assert(rtypeof(tcar) == INT_T);
 
-		if(tcar.rint.val == '"')	// escape
+		if(print_readably)	// escape
 		{
-			cur = cons_and_cdr(RCHAR('\\'), cur);
+			if(tcar.rint.val == '"')
+			{
+				cur = cons_and_cdr(RCHAR('\\'), cur);
+				cur = cons_and_cdr(tcar,        cur);
+			}
+			else if(tcar.rint.val == '\n')
+			{
+				cur = cons_and_cdr(RCHAR('\\'), cur);
+				cur = cons_and_cdr(RCHAR('n'),  cur);
+			}
+			else if(tcar.rint.val == '\\')
+			{
+				cur = cons_and_cdr(RCHAR('\\'), cur);
+				cur = cons_and_cdr(tcar,        cur);
+			}
+			else
+			{
+				cur = cons_and_cdr(tcar,        cur);
+			}
 		}
-		cur = cons_and_cdr(tcar, cur);
+		else
+		{
+			cur = cons_and_cdr(tcar, cur);
+		}
 
 		s = cdr(s);
 		assert(rtypeof(s) == CONS_T);
@@ -228,11 +251,12 @@ void printline(value_t s, FILE* fp)
 	return ;
 }
 
-value_t pr_str(value_t s, value_t cyclic)
+value_t pr_str(value_t s, value_t cyclic, bool print_readably)
 {
 	switch(rtypeof(s))
 	{
 	    case CONS_T:
+	    case VEC_T:
 		return pr_str_cons(s, cyclic);
 
 	    case SYM_T:
@@ -242,7 +266,7 @@ value_t pr_str(value_t s, value_t cyclic)
 		return pr_str_int(s.rint.val);
 
 	    case STR_T:
-		return pr_str_str(s);
+		return pr_str_str(s, print_readably);
 
 	    case CFN_T:
 		return pr_str_cfn(s, cyclic);

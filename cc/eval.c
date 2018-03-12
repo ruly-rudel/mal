@@ -20,6 +20,7 @@ value_t eval_ast	(value_t ast, value_t env)
 		return get_env_value(ast, env);
 
 	    case CONS_T:
+	    case VEC_T:
 		return eval_ast_list(ast, env);
 
 	    default:
@@ -29,7 +30,9 @@ value_t eval_ast	(value_t ast, value_t env)
 
 value_t eval_ast_list(value_t list, value_t env)
 {
-	assert(rtypeof(list) == CONS_T);
+	assert(rtypeof(list) == CONS_T || rtypeof(list) == VEC_T);
+	bool is_vec = rtypeof(list) == VEC_T;
+	list.type.main = CONS_T;
 
 	if(nilp(list))
 	{
@@ -49,7 +52,9 @@ value_t eval_ast_list(value_t list, value_t env)
 			return lcdr;
 		}
 
-		return cons(lcar, lcdr);
+		value_t ret = cons(lcar, lcdr);
+		ret.type.main = is_vec ? VEC_T : CONS_T;
+		return ret;
 	}
 }
 
@@ -109,10 +114,11 @@ value_t eval_let(value_t vcdr, value_t env)
 
 	// local symbols
 	value_t def = car(vcdr);
-	if(rtypeof(def) != CONS_T)
+	if(rtypeof(def) != CONS_T && rtypeof(def) != VEC_T)
 	{
 		return RERR(ERR_ARG);
 	}
+	def.type.main = CONS_T;
 
 	while(!nilp(def))
 	{

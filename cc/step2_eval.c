@@ -70,7 +70,7 @@ value_t eval(value_t v, value_t env)
 
 void print(value_t s, FILE* fp)
 {
-	printline(pr_str(s, cons(RINT(0), NIL)), fp);
+	printline(pr_str(s, cons(RINT(0), NIL), true), fp);
 	return;
 }
 

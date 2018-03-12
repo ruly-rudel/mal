@@ -193,6 +193,9 @@ bool eq(value_t x, value_t y)
 
 bool equal(value_t x, value_t y)
 {
+	if(rtypeof(x) == VEC_T) x.type.main = CONS_T;
+	if(rtypeof(y) == VEC_T) y.type.main = CONS_T;
+
 	if(eq(x, y))
 	{
 		return true;

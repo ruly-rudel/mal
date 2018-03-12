@@ -25,7 +25,7 @@ value_t eval(value_t v)
 
 void print(value_t s, FILE* fp)
 {
-	printline(pr_str(s, NIL), fp);
+	printline(pr_str(s, NIL, true), fp);
 	return;
 }
 
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 			{
 				fprintf(stdout, "\n");
 				break;
-			} 
+			}
 		}
 		else
 		{

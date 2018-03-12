@@ -79,10 +79,11 @@ value_t eval_list(value_t v, value_t env)
 
 				// formal arguments from clojure
 				value_t fargs = car(fn_ast);
-				if(rtypeof(fargs) != CONS_T)
+				if(rtypeof(fargs) != CONS_T && rtypeof(fargs) != VEC_T)
 				{
 					return RERR(ERR_ARG);
 				}
+				fargs.type.main = CONS_T;
 
 				// function body from clojure
 				fn_ast = cdr(fn_ast);
@@ -137,7 +138,7 @@ value_t eval(value_t v, value_t env)
 
 void print(value_t s, FILE* fp)
 {
-	printline(pr_str(s, cons(RINT(0), NIL)), fp);
+	printline(pr_str(s, cons(RINT(0), NIL), true), fp);
 	return;
 }
 

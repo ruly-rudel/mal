@@ -23,7 +23,7 @@ static void scan_to_lf(value_t *s)
 			*s = cdr(*s);
 			return ;
 		}
-		
+
 		*s = cdr(*s);
 	}
 
@@ -58,7 +58,7 @@ static value_t scan_to_whitespace(value_t *s)
 		    c.rint.val == ';'  ||
 		    c.rint.val == '\'' ||
 		    c.rint.val == '"'  ||
-		    c.rint.val == ','  
+		    c.rint.val == ','
 		  )
 		{
 			r.type.main = SYM_T;
@@ -115,7 +115,14 @@ static value_t scan_to_doublequote(value_t *s)
 			break;
 
 		    case 1:	// escape
-			cur = cons_and_cdr(c, cur);
+		    	if(c.rint.val == 'n')	// \n
+			{
+				cur = cons_and_cdr(RCHAR('\n'), cur);
+			}
+			else
+			{
+				cur = cons_and_cdr(c, cur);
+			}
 			st = 0;
 			break;
 		}
@@ -143,7 +150,7 @@ static value_t scan1(value_t *s)
 		if( c.rint.val == ' '  ||
 		    c.rint.val == '\t' ||
 		    c.rint.val == '\n' ||
-		    c.rint.val == ','  
+		    c.rint.val == ','
 		  )
 		{
 			*s = cdr(*s);

@@ -92,9 +92,72 @@ static value_t div(value_t body, value_t env)
 	}
 }
 
+static value_t b_pr_str2(value_t body, value_t cyclic, bool print_readably, bool ws_sep)
+{
+	if(nilp(body))
+	{
+		return NIL;
+	}
+	else
+	{
+		if(ws_sep)  // separate with white space
+		{
+			return nconc(
+				str_to_rstr(" "),
+				nconc(
+					pr_str(car(body), cyclic, print_readably),
+					b_pr_str2(cdr(body), cyclic, print_readably, ws_sep)
+				)
+			);
+		}
+		else
+		{
+			return nconc(
+				pr_str(car(body), cyclic, print_readably),
+				b_pr_str2(cdr(body), cyclic, print_readably, ws_sep)
+			);
+		}
+	}
+}
+
+static value_t b_pr_str1(value_t body, value_t cyclic, bool print_readably, bool ws_sep)
+{
+	if(nilp(body))
+	{
+		return NIL;
+	}
+	else
+	{
+		return nconc(
+			pr_str(car(body), cyclic, print_readably),
+			b_pr_str2(cdr(body), cyclic, print_readably, ws_sep)
+		);
+	}
+}
+
+static value_t b_pr_str(value_t body, value_t env)
+{
+	return b_pr_str1(body, cons(RINT(0), NIL), true, true);
+	//return pr_str(car(body), cons(RINT(0), NIL), true);
+}
+
+static value_t str(value_t body, value_t env)
+{
+	return b_pr_str1(body, cons(RINT(0), NIL), false, false);
+	//return pr_str(car(body), cons(RINT(0), NIL), false);
+}
+
 static value_t prn(value_t body, value_t env)
 {
-	printline(pr_str(car(body), cons(RINT(0), NIL)), stdout);
+	printline(b_pr_str1(body, cons(RINT(0), NIL), true, true), stdout);
+	//printline(pr_str(car(body), cons(RINT(0), NIL), true), stdout);
+	return NIL;
+}
+
+static value_t println(value_t body, value_t env)
+{
+	printline(b_pr_str1(body, cons(RINT(0), NIL), false, true), stdout);
+	//printline(pr_str(car(body), cons(RINT(0), NIL), false), stdout);
 	return NIL;
 }
 
@@ -141,6 +204,7 @@ static value_t is_empty(value_t body, value_t env)
 {
 #ifdef MAL
 	value_t arg = car(body);
+	if(rtypeof(arg) == VEC_T) arg.type.main = CONS_T;
 	return rtypeof(arg) == CONS_T && nilp(car(arg)) && nilp(cdr(arg)) ? SYM_TRUE : SYM_FALSE;
 #else  // MAL
 	return nilp(car(body)) ? SYM_TRUE : SYM_FALSE;
@@ -174,10 +238,11 @@ static value_t count1(value_t body)
 static value_t count(value_t body, value_t env)
 {
 	value_t arg = car(body);
-	if(rtypeof(arg) != CONS_T)
+	if(rtypeof(arg) != CONS_T && rtypeof(arg) != VEC_T)
 	{
 		return RERR(ERR_TYPE);
 	}
+	arg.type.main = CONS_T;
 
 #ifdef MAL
 	if(nilp(car(arg)))
@@ -254,7 +319,7 @@ static value_t emt(value_t body, value_t env)
 
 value_t	create_root_env	(void)
 {
-	value_t key = list(17,
+	value_t key = list(20,
 	                      str_to_sym("nil"),
 	                      str_to_sym("true"),
 	                      str_to_sym("false"),
@@ -262,7 +327,10 @@ value_t	create_root_env	(void)
 	                      str_to_sym("-"),
 	                      str_to_sym("*"),
 	                      str_to_sym("/"),
+	                      str_to_sym("pr-str"),
+	                      str_to_sym("str"),
 	                      str_to_sym("prn"),
+	                      str_to_sym("println"),
 	                      str_to_sym("list"),
 	                      str_to_sym("list?"),
 	                      str_to_sym("empty?"),
@@ -274,7 +342,7 @@ value_t	create_root_env	(void)
 	                      str_to_sym(">=")
 	                  );
 
-	value_t val = list(17,
+	value_t val = list(20,
 			      NIL,
 			      str_to_sym("true"),
 			      str_to_sym("false"),
@@ -282,7 +350,10 @@ value_t	create_root_env	(void)
 	                      cfn(RFN(sub), NIL),
 	                      cfn(RFN(mul), NIL),
 	                      cfn(RFN(div), NIL),
+	                      cfn(RFN(b_pr_str), NIL),
+	                      cfn(RFN(str), NIL),
 	                      cfn(RFN(prn), NIL),
+	                      cfn(RFN(println), NIL),
 	                      cfn(RFN(b_list), NIL),
 	                      cfn(RFN(is_list), NIL),
 	                      cfn(RFN(is_empty), NIL),

@@ -17,8 +17,8 @@ typedef enum _rtype_t {
 	STR_T,
 	CFN_T,
 	CLOJ_T,
-	MACRO_T,
 	VEC_T,
+	HASH_T,
 	OTH_T,
 
 	// sub types (content is value)
