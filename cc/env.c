@@ -362,17 +362,30 @@ value_t	create_root_env	(void)
 			  );
 
 	return create_env(key, val, NIL);
-	/*
-	value_t env = cons(NIL, NIL);
+}
 
-	set_env(str_to_sym("+"), cfn(RFN(add), env), env);
-	set_env(str_to_sym("-"), cfn(RFN(sub), env), env);
-	set_env(str_to_sym("*"), cfn(RFN(mul), env), env);
-	set_env(str_to_sym("/"), cfn(RFN(div), env), env);
+static value_t make_bind(value_t key, value_t val, value_t alist)
+{
+	assert(rtypeof(key)   == CONS_T);
+	assert(rtypeof(val)   == CONS_T);
+	assert(rtypeof(alist) == CONS_T);
 
-	return env;
-	*/
+	value_t key_car = car(key);
+	value_t val_car = car(val);
 
+	if(nilp(key))
+	{
+		return alist;
+	}
+	else if(equal(key_car, str_to_sym("&")))	// rest parameter
+	{
+		key_car = car(cdr(key));
+		return acons(key_car, val, alist);
+	}
+	else
+	{
+		return make_bind(cdr(key), cdr(val), acons(key_car, val_car, alist));
+	}
 }
 
 value_t	create_env	(value_t key, value_t val, value_t outer)
@@ -381,7 +394,7 @@ value_t	create_env	(value_t key, value_t val, value_t outer)
 	assert(rtypeof(key)   == CONS_T);
 	assert(rtypeof(val)   == CONS_T);
 
-	return cons(pairlis(key, val), outer);
+	return cons(make_bind(key, val, NIL), outer);
 }
 
 // search only current environment, set only on current environment
