@@ -1,7 +1,9 @@
 #include <assert.h>
+#include <stdlib.h>
 #include "builtin.h"
 #include "env.h"
 #include "util.h"
+#include "reader.h"
 #include "printer.h"
 
 
@@ -67,7 +69,7 @@ static value_t mul(value_t body, value_t env)
 	return sum;
 }
 
-static value_t div(value_t body, value_t env)
+static value_t divide(value_t body, value_t env)
 {
 	assert(rtypeof(body) == CONS_T);
 	if(nilp(body))
@@ -308,61 +310,55 @@ static value_t emt(value_t body, value_t env)
 	return comp(body, comp_emt);
 }
 
-
-
-/////////////////////////////////////////////////////////////////////
-// public: Environment create, search and modify functions
-
-value_t	create_root_env	(void)
+static value_t read_string(value_t body, value_t env)
 {
-	value_t key = list(20,
-	                      str_to_sym("nil"),
-	                      str_to_sym("true"),
-	                      str_to_sym("false"),
-	                      str_to_sym("+"),
-	                      str_to_sym("-"),
-	                      str_to_sym("*"),
-	                      str_to_sym("/"),
-	                      str_to_sym("pr-str"),
-	                      str_to_sym("str"),
-	                      str_to_sym("prn"),
-	                      str_to_sym("println"),
-	                      str_to_sym("list"),
-	                      str_to_sym("list?"),
-	                      str_to_sym("empty?"),
-	                      str_to_sym("count"),
-	                      str_to_sym("="),
-	                      str_to_sym("<"),
-	                      str_to_sym("<="),
-	                      str_to_sym(">"),
-	                      str_to_sym(">=")
-	                  );
-
-	value_t val = list(20,
-			      NIL,
-			      str_to_sym("true"),
-			      str_to_sym("false"),
-	                      cfn(RFN(add), NIL),
-	                      cfn(RFN(sub), NIL),
-	                      cfn(RFN(mul), NIL),
-	                      cfn(RFN(div), NIL),
-	                      cfn(RFN(b_pr_str), NIL),
-	                      cfn(RFN(str), NIL),
-	                      cfn(RFN(prn), NIL),
-	                      cfn(RFN(println), NIL),
-	                      cfn(RFN(b_list), NIL),
-	                      cfn(RFN(is_list), NIL),
-	                      cfn(RFN(is_empty), NIL),
-	                      cfn(RFN(count), NIL),
-	                      cfn(RFN(b_equal), NIL),
-	                      cfn(RFN(lt), NIL),
-	                      cfn(RFN(elt), NIL),
-	                      cfn(RFN(mt), NIL),
-	                      cfn(RFN(emt), NIL)
-			  );
-
-	return create_env(key, val, NIL);
+	return read_str(car(body));
 }
+
+static value_t slurp(value_t body, value_t env)
+{
+	// filename
+	value_t fn = car(body);
+	if(rtypeof(fn) != STR_T)
+	{
+		return RERR(ERR_TYPE);
+	}
+
+	// to cstr
+	char* fn_cstr = rstr_to_str(fn);
+	FILE* fp = fopen(fn_cstr, "r");
+	free(fn_cstr);
+
+	// read all
+	if(fp)
+	{
+		value_t buf = NIL;
+		value_t* cur = &buf;
+
+		int c;
+		while((c = fgetc(fp)) != EOF)
+		{
+			cur = cons_and_cdr(RCHAR(c), cur);
+		}
+		fclose(fp);
+		buf.type.main = STR_T;
+
+		return buf;
+	}
+	else	// file not found or other error.
+	{
+		return RERR(ERR_FILENOTFOUND);
+	}
+}
+
+value_t eval(value_t v, value_t env);
+
+static value_t b_eval(value_t body, value_t env)
+{
+	value_t ast = car(body);
+	return eval(ast, last(env));	// use root environment
+}
+
 
 static value_t make_bind(value_t key, value_t val, value_t alist)
 {
@@ -386,6 +382,67 @@ static value_t make_bind(value_t key, value_t val, value_t alist)
 	{
 		return make_bind(cdr(key), cdr(val), acons(key_car, val_car, alist));
 	}
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// public: Environment create, search and modify functions
+
+value_t	create_root_env	(void)
+{
+	value_t key = list(23,
+	                      str_to_sym("nil"),
+	                      str_to_sym("true"),
+	                      str_to_sym("false"),
+	                      str_to_sym("+"),
+	                      str_to_sym("-"),
+	                      str_to_sym("*"),
+	                      str_to_sym("/"),
+	                      str_to_sym("pr-str"),
+	                      str_to_sym("str"),
+	                      str_to_sym("prn"),
+	                      str_to_sym("println"),
+	                      str_to_sym("list"),
+	                      str_to_sym("list?"),
+	                      str_to_sym("empty?"),
+	                      str_to_sym("count"),
+	                      str_to_sym("read-string"),
+	                      str_to_sym("slurp"),
+	                      str_to_sym("eval"),
+	                      str_to_sym("="),
+	                      str_to_sym("<"),
+	                      str_to_sym("<="),
+	                      str_to_sym(">"),
+	                      str_to_sym(">=")
+	                  );
+
+	value_t val = list(23,
+			      NIL,
+			      str_to_sym("true"),
+			      str_to_sym("false"),
+	                      cfn(RFN(add), NIL),
+	                      cfn(RFN(sub), NIL),
+	                      cfn(RFN(mul), NIL),
+	                      cfn(RFN(divide), NIL),
+	                      cfn(RFN(b_pr_str), NIL),
+	                      cfn(RFN(str), NIL),
+	                      cfn(RFN(prn), NIL),
+	                      cfn(RFN(println), NIL),
+	                      cfn(RFN(b_list), NIL),
+	                      cfn(RFN(is_list), NIL),
+	                      cfn(RFN(is_empty), NIL),
+	                      cfn(RFN(count), NIL),
+	                      cfn(RFN(read_string), NIL),
+	                      cfn(RFN(slurp), NIL),
+	                      cfn(RFN(b_eval), NIL),
+	                      cfn(RFN(b_equal), NIL),
+	                      cfn(RFN(lt), NIL),
+	                      cfn(RFN(elt), NIL),
+	                      cfn(RFN(mt), NIL),
+	                      cfn(RFN(emt), NIL)
+			  );
+
+	return create_env(key, val, NIL);
 }
 
 value_t	create_env	(value_t key, value_t val, value_t outer)

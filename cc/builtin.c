@@ -332,6 +332,25 @@ value_t str_to_rstr	(const char* s)
 	return r;
 }
 
+char*   rstr_to_str	(value_t s)
+{
+	assert(rtypeof(s) == STR_T);
+	s.type.main = CONS_T;
+
+	char* buf = (char*)malloc(256);	// fix it
+	if(buf)
+	{
+		buf[0] = '\0';
+		char *p = buf;
+		while(!nilp(s))
+		{
+			*p++ = car(s).rint.val;
+			s = cdr(s);
+		}
+	}
+
+	return buf;
+}
 
 
 /////////////////////////////////////////////////////////////////////

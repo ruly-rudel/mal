@@ -92,6 +92,7 @@ typedef struct _cons_t
 #define ERR_ARG		5
 #define ERR_NOTFN	6
 #define ERR_NOTSYM	7
+#define ERR_FILENOTFOUND	8
 
 rtype_t rtypeof	(value_t v);
 
@@ -118,6 +119,7 @@ value_t pairlis		(value_t key, value_t val);
 value_t str_to_cons	(const char* s);
 value_t str_to_rstr	(const char* s);
 value_t str_to_sym	(const char* s);
+char*   rstr_to_str	(value_t s);
 
 value_t* cons_and_cdr(value_t v, value_t* c);
 
