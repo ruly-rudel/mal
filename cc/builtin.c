@@ -151,6 +151,29 @@ value_t last(value_t x)
 	}
 }
 
+value_t nth(int n, value_t x)
+{
+	if(rtypeof(x) != CONS_T && rtypeof(x) != VEC_T && rtypeof(x) != STR_T && rtypeof(x) != SYM_T)
+	{
+		return RERR(ERR_TYPE);
+	}
+	x.type.main = CONS_T;
+
+	if(nilp(x))
+	{
+		return RERR(ERR_RANGE);
+	}
+
+	if(n == 0)
+	{
+		return car(x);
+	}
+	else
+	{
+		return nth(n - 1, cdr(x));
+	}
+}
+
 value_t nconc(value_t a, value_t b)
 {
 	assert(rtypeof(a) == CONS_T || rtypeof(a) == STR_T || rtypeof(a) == SYM_T || rtypeof(a) == VEC_T);
@@ -322,7 +345,6 @@ value_t concat(int n, ...)
 {
 	va_list	 arg;
 	value_t r = EMPTY_LIST;
-	value_t* cur = &r;
 
 	va_start(arg, n);
 	for(int i = 0; i < n; i++)

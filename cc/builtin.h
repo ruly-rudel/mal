@@ -17,8 +17,8 @@ typedef enum _rtype_t {
 	STR_T,
 	CFN_T,
 	CLOJ_T,
+	MACRO_T,
 	VEC_T,
-	HASH_T,
 	OTH_T,
 
 	// sub types (content is value)
@@ -95,6 +95,7 @@ typedef struct _cons_t
 #define ERR_NOTFN	6
 #define ERR_NOTSYM	7
 #define ERR_FILENOTFOUND	8
+#define ERR_RANGE	9
 
 rtype_t rtypeof	(value_t v);
 
@@ -107,6 +108,7 @@ bool    intp		(value_t x);
 value_t rplaca		(value_t x, value_t v);
 value_t rplacd		(value_t x, value_t v);
 value_t last		(value_t x);
+value_t nth		(int n, value_t x);
 value_t nconc		(value_t a, value_t b);
 bool	eq		(value_t x, value_t y);
 bool	equal		(value_t x, value_t y);

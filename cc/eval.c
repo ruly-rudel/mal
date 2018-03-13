@@ -173,5 +173,94 @@ value_t eval_quasiquote	(value_t vcdr, value_t env)
 	}
 }
 
+value_t eval_defmacro(value_t vcdr, value_t env)
+{
+	// key
+	value_t key = car(vcdr);
+	if(rtypeof(key) != SYM_T)
+	{
+		return RERR(ERR_NOTSYM);
+	}
+
+	// value
+	value_t val_notev = cdr(vcdr);
+	if(rtypeof(val_notev) != CONS_T)
+	{
+		return RERR(ERR_ARG);
+	}
+
+	value_t val = eval(car(val_notev), env);
+	assert(rtypeof(val) == CLOJ_T);
+	val.type.main = MACRO_T;
+
+	if(!errp(val))
+	{
+		set_env(key, val, env);
+	}
+	return val;
+}
+
+value_t is_macro_call(value_t ast, value_t env)
+{
+	if(rtypeof(ast) == CONS_T)
+	{
+		value_t ast_1st = car(ast);
+		if(rtypeof(ast_1st) == SYM_T)
+		{
+			value_t ast_1st_eval = get_env_value(ast_1st, env);
+			if(rtypeof(ast_1st_eval) == MACRO_T)
+			{
+				return ast_1st_eval;
+			}
+		}
+	}
+
+	return NIL;
+}
+
+value_t apply(value_t fn, value_t args)
+{
+	fn.type.main = CONS_T;
+
+	value_t fn_ast = car(fn);
+	if(rtypeof(fn_ast) != CONS_T)
+	{
+		return RERR(ERR_ARG);
+	}
+
+	// formal arguments from clojure
+	value_t fargs = car(fn_ast);
+	if(rtypeof(fargs) != CONS_T && rtypeof(fargs) != VEC_T)
+	{
+		return RERR(ERR_ARG);
+	}
+	fargs.type.main = CONS_T;
+
+	// function body from clojure
+	fn_ast = cdr(fn_ast);
+	if(rtypeof(fn_ast) != CONS_T)
+	{
+		return RERR(ERR_ARG);
+	}
+	value_t body = car(fn_ast);
+
+	// create bindings (is environment)
+	value_t fn_env = create_env(fargs, args, cdr(fn));
+
+	// apply
+	return eval(body, fn_env);
+}
+
+value_t macroexpand(value_t ast, value_t env)
+{
+	value_t macro;
+	while(!nilp(macro = is_macro_call(ast, env)))
+	{
+		ast = apply(macro, cdr(ast));
+	}
+
+	return ast;
+}
+
 // End of File
 /////////////////////////////////////////////////////////////////////

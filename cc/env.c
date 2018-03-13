@@ -391,6 +391,31 @@ static value_t b_concat(value_t body, value_t env)
 	return r;
 }
 
+static value_t b_nth(value_t body, value_t env)
+{
+	value_t arg1 = car(body);
+	value_t arg2 = car(cdr(body));
+	if(rtypeof(arg2) != INT_T)
+	{
+		return RERR(ERR_TYPE);
+	}
+	else
+	{
+		return nth(arg2.rint.val, arg1);
+	}
+}
+
+static value_t first(value_t body, value_t env)
+{
+	return car(car(body));
+}
+
+static value_t rest(value_t body, value_t env)
+{
+	return cdr(car(body));
+}
+
+
 static value_t make_bind(value_t key, value_t val, value_t alist)
 {
 	assert(rtypeof(key)   == CONS_T);
@@ -421,7 +446,7 @@ static value_t make_bind(value_t key, value_t val, value_t alist)
 
 value_t	create_root_env	(void)
 {
-	value_t key = list(25,
+	value_t key = list(28,
 	                      str_to_sym("nil"),
 	                      str_to_sym("true"),
 	                      str_to_sym("false"),
@@ -442,6 +467,9 @@ value_t	create_root_env	(void)
 	                      str_to_sym("eval"),
 	                      str_to_sym("cons"),
 	                      str_to_sym("concat"),
+	                      str_to_sym("nth"),
+	                      str_to_sym("first"),
+	                      str_to_sym("rest"),
 	                      str_to_sym("="),
 	                      str_to_sym("<"),
 	                      str_to_sym("<="),
@@ -449,7 +477,7 @@ value_t	create_root_env	(void)
 	                      str_to_sym(">=")
 	                  );
 
-	value_t val = list(25,
+	value_t val = list(28,
 			      NIL,
 			      str_to_sym("true"),
 			      str_to_sym("false"),
@@ -470,6 +498,9 @@ value_t	create_root_env	(void)
 	                      cfn(RFN(b_eval), NIL),
 	                      cfn(RFN(b_cons), NIL),
 	                      cfn(RFN(b_concat), NIL),
+	                      cfn(RFN(b_nth), NIL),
+	                      cfn(RFN(first), NIL),
+	                      cfn(RFN(rest), NIL),
 	                      cfn(RFN(b_equal), NIL),
 	                      cfn(RFN(lt), NIL),
 	                      cfn(RFN(elt), NIL),

@@ -204,7 +204,7 @@ static value_t pr_str_cfn(value_t s, value_t cyclic)
 
 static value_t pr_str_cloj(value_t s, value_t cyclic)
 {
-	assert(rtypeof(s) == CLOJ_T);
+	assert(rtypeof(s) == CLOJ_T || rtypeof(s) == MACRO_T);
 
 #ifdef PRINT_CLOS_ENV
 	s.type.main = CONS_T;
@@ -285,6 +285,7 @@ value_t pr_str(value_t s, value_t cyclic, bool print_readably)
 		return pr_str_cfn(s, cyclic);
 
 	    case CLOJ_T:
+	    case MACRO_T:
 		return pr_str_cloj(s, cyclic);
 
 	    case ERR_T:
