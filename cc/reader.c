@@ -221,6 +221,49 @@ static value_t read_form(scan_t* st)
 				return read_vector(st);
 			}
 #endif
+			else if(tcar.rint.val == '\'')
+			{
+				scan_next(st);
+				return cons(str_to_sym("quote"), cons(read_form(st), NIL));
+			}
+			else if(tcar.rint.val == '`')
+			{
+				scan_next(st);
+				return cons(str_to_sym("quasiquote"), cons(read_form(st), NIL));
+			}
+			else if(tcar.rint.val == '~')
+			{
+				token = scan_next(st);
+				if(errp(token))	// scan error
+				{
+					return token;
+				}
+
+				assert(rtypeof(token) == STR_T || rtypeof(token) == SYM_T);
+				if(rtypeof(token) == SYM_T)
+				{
+					value_t tcons   = token;
+					tcons.type.main = CONS_T;
+					assert(!nilp(tcons));
+
+					value_t tcar = car(tcons);
+					assert(rtypeof(tcar) == INT_T);
+					if(tcar.rint.val == '@')
+					{
+						scan_next(st);
+						return cons(str_to_sym("splice-unquote"), cons(read_form(st), NIL));
+					}
+					else
+					{
+						return cons(str_to_sym("unquote"), cons(read_form(st), NIL));
+					}
+				}
+				else
+				{
+					return cons(str_to_sym("unquote"), cons(read_form(st), NIL));
+				}
+
+			}
 			else
 			{
 				return read_atom(st);
