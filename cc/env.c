@@ -359,6 +359,64 @@ static value_t b_eval(value_t body, value_t env)
 	return eval(ast, last(env));	// use root environment
 }
 
+static value_t b_cons(value_t body, value_t env)
+{
+	value_t a = car(body);
+	value_t b = car(cdr(body));
+#ifdef MAL
+	if(equal(is_list(cdr(body), env), SYM_TRUE))
+	{
+		if(equal(is_empty(cdr(body), env), SYM_TRUE))
+		{
+			return cons(a, NIL);
+		}
+		else
+		{
+			return cons(a, b);
+		}
+	}
+	else
+	{
+		return RERR(ERR_TYPE);
+	}
+#else  // MAL
+	return cons(a, b);
+#endif // MAL
+}
+
+static value_t concat(value_t body, value_t env)
+{
+#ifdef MAL
+	value_t r = cons(NIL, NIL);
+#else  // MAL
+	value_t r = NIL;
+#endif // MAL
+	while(!nilp(body))
+	{
+		if(rtypeof(body) != CONS_T)
+		{
+			return RERR(ERR_TYPE);
+		}
+		else
+		{
+#ifdef MAL
+			if(equal(is_empty(cons(r, NIL), env), SYM_TRUE))
+			{
+				r = copy_list(car(body));
+			}
+			else
+			{
+				r = nconc(r, copy_list(car(body)));
+			}
+#else  // MAL
+			r = nconc(r, copy_list(car(body)));
+#endif // MAL
+			body = cdr(body);
+		}
+	}
+
+	return r;
+}
 
 static value_t make_bind(value_t key, value_t val, value_t alist)
 {
@@ -390,7 +448,7 @@ static value_t make_bind(value_t key, value_t val, value_t alist)
 
 value_t	create_root_env	(void)
 {
-	value_t key = list(23,
+	value_t key = list(25,
 	                      str_to_sym("nil"),
 	                      str_to_sym("true"),
 	                      str_to_sym("false"),
@@ -409,6 +467,8 @@ value_t	create_root_env	(void)
 	                      str_to_sym("read-string"),
 	                      str_to_sym("slurp"),
 	                      str_to_sym("eval"),
+	                      str_to_sym("cons"),
+	                      str_to_sym("concat"),
 	                      str_to_sym("="),
 	                      str_to_sym("<"),
 	                      str_to_sym("<="),
@@ -416,7 +476,7 @@ value_t	create_root_env	(void)
 	                      str_to_sym(">=")
 	                  );
 
-	value_t val = list(23,
+	value_t val = list(25,
 			      NIL,
 			      str_to_sym("true"),
 			      str_to_sym("false"),
@@ -435,6 +495,8 @@ value_t	create_root_env	(void)
 	                      cfn(RFN(read_string), NIL),
 	                      cfn(RFN(slurp), NIL),
 	                      cfn(RFN(b_eval), NIL),
+	                      cfn(RFN(b_cons), NIL),
+	                      cfn(RFN(concat), NIL),
 	                      cfn(RFN(b_equal), NIL),
 	                      cfn(RFN(lt), NIL),
 	                      cfn(RFN(elt), NIL),
