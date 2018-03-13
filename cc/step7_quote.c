@@ -55,6 +55,10 @@ value_t eval_list(value_t v, value_t env)
 	{
 		return car(vcdr);
 	}
+	else if(equal(vcar, str_to_sym("quasiquote")))	// quasiquote
+	{
+		return car(eval_quasiquote(vcdr, env));
+	}
 	else						// apply function
 	{
 		value_t ev = eval_ast(v, env);

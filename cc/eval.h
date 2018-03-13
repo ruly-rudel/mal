@@ -10,5 +10,6 @@ value_t eval_def	(value_t vcdr, value_t env);
 value_t eval_let	(value_t vcdr, value_t env);
 value_t eval_do		(value_t vcdr, value_t env);
 value_t eval_if		(value_t vcdr, value_t env);
+value_t eval_quasiquote	(value_t vcdr, value_t env);
 
 #endif // _eval_h_

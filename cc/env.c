@@ -198,15 +198,9 @@ static value_t is_list(value_t body, value_t env)
 #endif // MAL
 }
 
-static value_t is_empty(value_t body, value_t env)
+static value_t b_is_empty(value_t body, value_t env)
 {
-#ifdef MAL
-	value_t arg = car(body);
-	if(rtypeof(arg) == VEC_T) arg.type.main = CONS_T;
-	return rtypeof(arg) == CONS_T && nilp(car(arg)) && nilp(cdr(arg)) ? SYM_TRUE : SYM_FALSE;
-#else  // MAL
-	return nilp(car(body)) ? SYM_TRUE : SYM_FALSE;
-#endif // MAL
+	return is_empty(car(body)) ? SYM_TRUE : SYM_FALSE;
 }
 
 static value_t count1(value_t body)
@@ -366,7 +360,7 @@ static value_t b_cons(value_t body, value_t env)
 #ifdef MAL
 	if(equal(is_list(cdr(body), env), SYM_TRUE))
 	{
-		if(equal(is_empty(cdr(body), env), SYM_TRUE))
+		if(is_empty(b))
 		{
 			return cons(a, NIL);
 		}
@@ -377,42 +371,21 @@ static value_t b_cons(value_t body, value_t env)
 	}
 	else
 	{
-		return RERR(ERR_TYPE);
+		if(rtypeof(b) == VEC_T) b.type.main = CONS_T;
+		return cons(a, b);
 	}
 #else  // MAL
 	return cons(a, b);
 #endif // MAL
 }
 
-static value_t concat(value_t body, value_t env)
+static value_t b_concat(value_t body, value_t env)
 {
-#ifdef MAL
-	value_t r = cons(NIL, NIL);
-#else  // MAL
-	value_t r = NIL;
-#endif // MAL
+	value_t r = EMPTY_LIST;
 	while(!nilp(body))
 	{
-		if(rtypeof(body) != CONS_T)
-		{
-			return RERR(ERR_TYPE);
-		}
-		else
-		{
-#ifdef MAL
-			if(equal(is_empty(cons(r, NIL), env), SYM_TRUE))
-			{
-				r = copy_list(car(body));
-			}
-			else
-			{
-				r = nconc(r, copy_list(car(body)));
-			}
-#else  // MAL
-			r = nconc(r, copy_list(car(body)));
-#endif // MAL
-			body = cdr(body);
-		}
+		r = concat(2, r, car(body));
+		body = cdr(body);
 	}
 
 	return r;
@@ -490,13 +463,13 @@ value_t	create_root_env	(void)
 	                      cfn(RFN(println), NIL),
 	                      cfn(RFN(b_list), NIL),
 	                      cfn(RFN(is_list), NIL),
-	                      cfn(RFN(is_empty), NIL),
+	                      cfn(RFN(b_is_empty), NIL),
 	                      cfn(RFN(count), NIL),
 	                      cfn(RFN(read_string), NIL),
 	                      cfn(RFN(slurp), NIL),
 	                      cfn(RFN(b_eval), NIL),
 	                      cfn(RFN(b_cons), NIL),
-	                      cfn(RFN(concat), NIL),
+	                      cfn(RFN(b_concat), NIL),
 	                      cfn(RFN(b_equal), NIL),
 	                      cfn(RFN(lt), NIL),
 	                      cfn(RFN(elt), NIL),

@@ -92,7 +92,7 @@ value_t eval_if(value_t vcdr, value_t env)
 {
 	value_t cond = eval(car(vcdr), env);
 
-	if(nilp(cond) || equal(cond, str_to_sym("false")))	// false
+	if(nilp(cond) || equal(cond, SYM_FALSE))	// false
 	{
 		return eval(car(cdr(cdr(vcdr))), env);
 	}
@@ -144,6 +144,33 @@ value_t eval_let(value_t vcdr, value_t env)
 	}
 
 	return eval(car(cdr(vcdr)), let_env);
+}
+
+value_t eval_quasiquote	(value_t vcdr, value_t env)
+{
+	if(!is_pair(vcdr))					// raw
+	{
+		return vcdr;					    // -> return as is.
+	}
+
+	value_t arg1 = car(vcdr);
+	if(equal(arg1, str_to_sym("unquote")))			// (unquote x)
+	{
+		value_t arg2 = car(cdr(vcdr));
+		return eval(arg2, env);				    // -> return evalueated x
+	}
+	else if(is_pair(arg1) &&
+		equal(car(arg1), str_to_sym("splice-unquote")))	// ((splice-unquote x) ...)
+	{
+		return concat(2,
+		              eval(car(cdr(arg1)), env),
+		              eval_quasiquote(cdr(vcdr), env));	    // -> return evaluated x ...
+	}
+	else							// other
+	{
+		return cons(eval_quasiquote(arg1,      env),
+		            eval_quasiquote(cdr(vcdr), env));	    // -> return cons quasiquote is applied
+	}
 }
 
 // End of File

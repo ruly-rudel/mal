@@ -78,11 +78,13 @@ typedef struct _cons_t
 #define RFN(X)    ((value_t){ .rfn = (X) })
 
 #ifdef MAL
-	#define SYM_TRUE  str_to_sym("true")
-	#define SYM_FALSE str_to_sym("false")
+	#define SYM_TRUE   str_to_sym("true")
+	#define SYM_FALSE  str_to_sym("false")
+	#define EMPTY_LIST cons(NIL, NIL)
 #else  // MAL
-	#define SYM_TRUE  str_to_sym("t")
-	#define SYM_FALSE NIL
+	#define SYM_TRUE   str_to_sym("t")
+	#define SYM_FALSE  NIL
+	#define EMPTY_LIST NIL
 #endif // MAL
 
 #define ERR_TYPE	1
@@ -115,6 +117,10 @@ value_t copy_list	(value_t list);
 value_t assoc		(value_t key, value_t list);
 value_t acons		(value_t key, value_t val, value_t list);
 value_t pairlis		(value_t key, value_t val);
+
+bool    is_pair		(value_t list);
+bool    is_empty	(value_t list);
+value_t concat		(int n, ...);
 
 value_t str_to_cons	(const char* s);
 value_t str_to_rstr	(const char* s);
